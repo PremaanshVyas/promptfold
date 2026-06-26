@@ -212,20 +212,55 @@ const hfAdapter: CaptureAdapter = {
   },
 };
 
-// ── Gemini: batchexecute RPC adapter (experimental) ─────────────────────────
-const postFetch: PostFetch = (url, init) => fetch(url, init as RequestInit);
+// ── Gemini: batchexecute RPC adapter (experimental, instrumented) ───────────
+const PF = "[PromptFold Gemini]";
 
-/** Read Gemini's page tokens out of the inline WIZ_global_data script. */
-function geminiTokens(): GeminiTokens | null {
-  const html = document.documentElement.innerHTML;
-  const at = html.match(/"SNlM0e":\s*"(.*?)"/)?.[1];
-  if (!at) return null;
-  return {
-    at,
-    ...(html.match(/"cfb2h":\s*"(.*?)"/)?.[1] ? { bl: html.match(/"cfb2h":\s*"(.*?)"/)![1] } : {}),
-    ...(html.match(/"FdrFJe":\s*"(.*?)"/)?.[1] ? { fsid: html.match(/"FdrFJe":\s*"(.*?)"/)![1] } : {}),
-    ...(html.match(/"TuX5cc":\s*"(.*?)"/)?.[1] ? { hl: html.match(/"TuX5cc":\s*"(.*?)"/)![1] } : {}),
-  };
+/** A fetch that logs status + a body snippet so failures are diagnosable. */
+const postFetch: PostFetch = async (url, init) => {
+  const res = await fetch(url, init as RequestInit);
+  try {
+    const snippet = (await res.clone().text()).slice(0, 700);
+    console.log(PF, "POST status", res.status, "url", url.slice(0, 110), "\nbody:", snippet);
+  } catch {
+    /* logging only */
+  }
+  return res as unknown as Awaited<ReturnType<PostFetch>>;
+};
+
+function pick(html: string, key: string): string | undefined {
+  return html.match(new RegExp(`"${key}":\\s*"([^"]*?)"`))?.[1];
+}
+
+/**
+ * Read Gemini's page tokens. SNlM0e lives in the page's WIZ_global_data, which an
+ * isolated content script can't read as a JS global, so we read it from the
+ * server-rendered HTML (fetch the page), falling back to the live DOM.
+ */
+async function geminiTokens(): Promise<GeminiTokens | null> {
+  let html = "";
+  try {
+    html = await (await fetch(location.href, { credentials: "include" })).text();
+  } catch (e) {
+    console.warn(PF, "fetch(location.href) failed", e);
+  }
+  if (!/"SNlM0e"/.test(html)) {
+    console.warn(PF, "SNlM0e not in fetched HTML, trying live DOM");
+    html = document.documentElement.innerHTML;
+  }
+  const at = pick(html, "SNlM0e");
+  if (!at) {
+    console.warn(PF, "SNlM0e token NOT found anywhere");
+    return null;
+  }
+  const tokens: GeminiTokens = { at };
+  const bl = pick(html, "cfb2h");
+  const fsid = pick(html, "FdrFJe");
+  const hl = pick(html, "TuX5cc");
+  if (bl) tokens.bl = bl;
+  if (fsid) tokens.fsid = fsid;
+  if (hl) tokens.hl = hl;
+  console.log(PF, "tokens found — at:", at.length, "chars, bl:", bl, "fsid:", !!fsid, "hl:", hl);
+  return tokens;
 }
 
 const geminiAdapter: CaptureAdapter = {
@@ -234,15 +269,21 @@ const geminiAdapter: CaptureAdapter = {
   matches: (h) => h === "gemini.google.com",
   async capture(capturedAt) {
     const cid = geminiConversationIdFromUrl(location.href);
+    console.log(PF, "url:", location.href, "→ cid:", cid);
     if (!cid) throw new Error("Open a saved Gemini conversation first, then click Fold.");
-    const tokens = geminiTokens();
+    const tokens = await geminiTokens();
     if (!tokens) throw new Error("Could not read Gemini session tokens from the page.");
-    return captureGeminiConversation(cid, {
-      post: postFetch,
-      tokens,
-      capturedAt,
-      reqid: 100000 + Math.floor(Math.random() * 900000),
-    });
+    try {
+      return await captureGeminiConversation(cid, {
+        post: postFetch,
+        tokens,
+        capturedAt,
+        reqid: 100000 + Math.floor(Math.random() * 900000),
+      });
+    } catch (e) {
+      console.warn(PF, "capture failed:", (e as Error).message);
+      throw e;
+    }
   },
 };
 
