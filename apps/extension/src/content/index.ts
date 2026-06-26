@@ -1,19 +1,16 @@
 /**
- * Content script, runs on claude.ai.
+ * Content script. Runs on every supported chat site (see manifest matches).
  *
  * 1. Mounts a Shadow-root host + a floating "Carry" button.
- * 2. On click: if this chat already has a saved brief, show it instantly (with a
- *    Regenerate option). Otherwise capture same-origin, distill via the worker,
- *    cache the result, and show it. No key → a clear CTA + free clean transcript.
+ * 2. On click: show the saved brief instantly if we have one (with Regenerate),
+ *    else capture via the right adapter for this site, distill via the worker,
+ *    cache, and show it. No key -> a clear CTA + free clean transcript.
+ *
+ * The site-specific part lives entirely in ./capture (the adapter registry), so
+ * this file is platform-agnostic.
  */
 
-import {
-  captureConversation,
-  conversationIdFromUrl,
-  renderTranscriptText,
-  type FetchLike,
-  type NormalizedTranscript,
-} from "@carrybot/core";
+import { renderTranscriptText, type NormalizedTranscript } from "@carrybot/core";
 import type {
   DistillResponse,
   ErrorResponse,
@@ -28,10 +25,14 @@ import {
   type DrawerHandle,
 } from "./drawer.js";
 import { loadCachedBrief, saveCachedBrief } from "../shared/cache.js";
+import { pickAdapter, type CaptureSource } from "./capture.js";
 
 const HOST_ID = "carrybot-host";
 
-const fetchImpl: FetchLike = (url, init) => fetch(url, init as RequestInit);
+/** Stable per-conversation key for the cache, works on any site. */
+function cacheKey(): string {
+  return location.host + location.pathname;
+}
 
 function mountHost(): ShadowRoot {
   let host = document.getElementById(HOST_ID);
@@ -49,7 +50,6 @@ function mountHost(): ShadowRoot {
 
 let openHandle: DrawerHandle | null = null;
 
-/** Send the transcript to the worker over a port and stream progress back. */
 function distillViaPort(
   transcript: unknown,
   onProgress: (p: ProgressResponse) => void,
@@ -80,24 +80,18 @@ function openSettings() {
   window.open(chrome.runtime.getURL("options.html"), "_blank");
 }
 
-/** Capture + distill + cache + render. */
-async function generate(
-  shadow: ShadowRoot,
-  button: HTMLButtonElement,
-  convoId: string,
-) {
+async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
+  const adapter = pickAdapter(location.hostname);
+  const source: CaptureSource = adapter.source;
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "Reading conversation…";
 
   let transcript: NormalizedTranscript;
   try {
-    transcript = await captureConversation(convoId, {
-      fetchImpl,
-      capturedAt: new Date().toISOString(),
-    });
+    transcript = await adapter.capture(new Date().toISOString());
   } catch (err) {
-    alert("carrybot capture failed: " + (err as Error).message);
+    alert("carrybot: " + (err as Error).message);
     button.disabled = false;
     button.textContent = original;
     return;
@@ -126,40 +120,38 @@ async function generate(
   }
 
   const savedAt = new Date().toISOString();
-  await saveCachedBrief(convoId, {
+  await saveCachedBrief(cacheKey(), {
     state: resp.state,
     framings: resp.framings,
     producedBy: resp.producedBy,
+    source,
     savedAt,
   });
   openHandle = openBriefDrawer(shadow, {
     state: resp.state,
     framings: resp.framings,
+    source,
     savedAt,
-    onRegenerate: () => void generate(shadow, button, convoId),
+    onRegenerate: () => void generate(shadow, button),
   });
 }
 
 async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
-  const convoId = conversationIdFromUrl(location.href);
-  if (!convoId) {
-    alert("Open a Claude conversation first, then click Carry.");
-    return;
-  }
   openHandle?.destroy();
 
   // Show the saved brief instantly if we have one; let the user Regenerate.
-  const cached = await loadCachedBrief(convoId);
+  const cached = await loadCachedBrief(cacheKey());
   if (cached) {
     openHandle = openBriefDrawer(shadow, {
       state: cached.state,
       framings: cached.framings,
+      source: cached.source,
       savedAt: cached.savedAt,
-      onRegenerate: () => void generate(shadow, button, convoId),
+      onRegenerate: () => void generate(shadow, button),
     });
     return;
   }
-  await generate(shadow, button, convoId);
+  await generate(shadow, button);
 }
 
 function injectButton(shadow: ShadowRoot) {

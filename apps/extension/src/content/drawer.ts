@@ -202,6 +202,8 @@ function relativeTime(iso: string): string {
 export interface BriefDrawerOptions {
   state: BriefState;
   framings: BriefFramings;
+  /** "data layer" (complete) or "screen" (DOM fallback, lower fidelity). */
+  source: string;
   savedAt: string;
   onRegenerate: () => void;
 }
@@ -210,16 +212,27 @@ export function openBriefDrawer(
   shadow: ShadowRoot,
   opts: BriefDrawerOptions,
 ): DrawerHandle {
-  const { state, framings, savedAt, onRegenerate } = opts;
+  const { state, framings, source, savedAt, onRegenerate } = opts;
   const title = state.meta.title;
   const { drawer, destroy } = shell(
     shadow,
     title,
-    `read from data layer · ${state.meta.producedBy} · generated ${relativeTime(savedAt)}`,
+    `read from ${source} · ${state.meta.producedBy} · generated ${relativeTime(savedAt)}`,
   );
 
   // Body: framing preview (top) → sections → framing preview (bottom).
   const body = el("div", "cb-body");
+  if (source === "screen") {
+    body.appendChild(
+      el(
+        "div",
+        "cb-warn",
+        "Captured from the screen, not this platform's data layer. " +
+          "Side-panel content (artifacts, canvases) may be missing. Supported " +
+          "platforms get a complete capture.",
+      ),
+    );
+  }
   const headFrame = framePreview("added at the TOP when you copy / export", framings.resumeHeader);
   const footFrame = framePreview("added at the END when you copy / export", framings.resumeFooter);
   body.appendChild(headFrame);

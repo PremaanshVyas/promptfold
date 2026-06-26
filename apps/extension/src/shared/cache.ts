@@ -13,6 +13,8 @@ export interface CachedBrief {
   state: BriefState;
   framings: BriefFramings;
   producedBy: string;
+  /** How the conversation was captured: "data layer" or "screen". */
+  source: string;
   /** ISO timestamp the brief was generated. */
   savedAt: string;
 }

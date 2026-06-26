@@ -9,8 +9,10 @@ export {
 } from "./claude-api.js";
 export {
   normalizeConversation,
+  transcriptFromMessages,
   activeBranch,
   type NormalizeOptions,
+  type SimpleMessage,
 } from "./normalize.js";
 export {
   classifyBlock,

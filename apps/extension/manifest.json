@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "carrybot, context handoff",
+  "name": "carrybot",
   "version": "0.1.0",
-  "description": "One click turns a long Claude chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
+  "description": "One click turns a long AI chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": [
     "https://claude.ai/*",
@@ -15,13 +15,28 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://claude.ai/*"],
+      "matches": [
+        "https://claude.ai/*",
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://*.perplexity.ai/*",
+        "https://poe.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://grok.com/*",
+        "https://chat.deepseek.com/*",
+        "https://chat.mistral.ai/*",
+        "https://huggingface.co/chat/*",
+        "https://meta.ai/*",
+        "https://www.meta.ai/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
   "options_page": "options.html",
   "action": {
-    "default_title": "carrybot, open settings"
+    "default_title": "carrybot settings"
   }
 }

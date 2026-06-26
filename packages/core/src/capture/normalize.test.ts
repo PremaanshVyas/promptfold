@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { normalizeConversation, activeBranch } from "./normalize.js";
+import {
+  normalizeConversation,
+  activeBranch,
+  transcriptFromMessages,
+} from "./normalize.js";
 import {
   mixedArtifactsConvo,
   flatTextConvo,
@@ -79,6 +83,24 @@ describe("normalizeConversation, real sandbox/writing chat", () => {
   it("treats the sandbox tool ops as classified, not unknown", () => {
     expect(t.integrity.complete).toBe(true);
     expect(t.integrity.unknown).toHaveLength(0);
+  });
+});
+
+describe("transcriptFromMessages (generic DOM adapter bridge)", () => {
+  it("builds a transcript from plain role/text messages", () => {
+    const t = transcriptFromMessages(
+      [
+        { role: "human", text: "use postgres or dynamo?" },
+        { role: "assistant", text: "postgres, your access is relational" },
+        { role: "human", text: "  " }, // empty, dropped
+      ],
+      { conversationId: "/c/123", title: "DB chat", capturedAt: AT },
+    );
+    expect(t.messages).toHaveLength(2);
+    expect(t.messages[0]?.role).toBe("human");
+    expect(t.artifacts).toEqual([]);
+    expect(t.integrity.complete).toBe(true);
+    expect(t.title).toBe("DB chat");
   });
 });
 
