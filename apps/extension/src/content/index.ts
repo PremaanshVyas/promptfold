@@ -77,7 +77,10 @@ function distillViaPort(
 }
 
 function openSettings() {
-  window.open(chrome.runtime.getURL("options.html"), "_blank");
+  // A content script cannot open a chrome-extension:// URL itself (the page
+  // context is blocked from navigating to extension URLs). Ask the worker, which
+  // has the privilege, to open the options page.
+  chrome.runtime.sendMessage({ type: "openOptions" });
 }
 
 async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {

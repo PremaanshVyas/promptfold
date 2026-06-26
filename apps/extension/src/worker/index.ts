@@ -75,3 +75,11 @@ chrome.runtime.onConnect.addListener((port) => {
     }
   });
 });
+
+// One-off messages from the content script (e.g. "open the options page", which
+// a content script cannot do itself).
+chrome.runtime.onMessage.addListener((message: unknown) => {
+  if ((message as { type?: string })?.type === "openOptions") {
+    chrome.runtime.openOptionsPage();
+  }
+});
