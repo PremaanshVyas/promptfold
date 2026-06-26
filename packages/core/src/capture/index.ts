@@ -27,3 +27,9 @@ export {
   type CaptureChatGptOptions,
   type GptConversation,
 } from "./chatgpt-api.js";
+export {
+  capturePerplexityThread,
+  normalizePerplexityThread,
+  perplexityThreadIdFromUrl,
+  type CapturePerplexityOptions,
+} from "./perplexity-api.js";

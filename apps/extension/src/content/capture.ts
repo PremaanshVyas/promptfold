@@ -15,6 +15,8 @@ import {
   conversationIdFromUrl,
   captureChatGptConversation,
   chatGptConversationIdFromUrl,
+  capturePerplexityThread,
+  perplexityThreadIdFromUrl,
   transcriptFromMessages,
   type FetchLike,
   type NormalizedTranscript,
@@ -138,9 +140,22 @@ const chatgptAdapter: CaptureAdapter = {
   },
 };
 
+// ── Perplexity: precise, cookie-REST adapter (same shape as Claude) ─────────
+const perplexityAdapter: CaptureAdapter = {
+  id: "perplexity",
+  source: "data layer",
+  matches: (h) => h === "perplexity.ai" || h.endsWith(".perplexity.ai"),
+  async capture(capturedAt) {
+    const slug = perplexityThreadIdFromUrl(location.href);
+    if (!slug) throw new Error("Open a Perplexity thread first, then click Carry.");
+    return capturePerplexityThread(slug, { fetchImpl, capturedAt, baseUrl: location.origin });
+  },
+};
+
 const ADAPTERS: CaptureAdapter[] = [
   claudeAdapter,
   chatgptAdapter,
+  perplexityAdapter,
   /* add precise adapters here */
 ];
 

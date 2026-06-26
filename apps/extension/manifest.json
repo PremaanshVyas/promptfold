@@ -8,6 +8,7 @@
     "https://claude.ai/*",
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
+    "https://*.perplexity.ai/*",
     "https://api.anthropic.com/*",
     "https://api.openai.com/*"
   ],
