@@ -10,6 +10,9 @@
     "https://chat.openai.com/*",
     "https://*.perplexity.ai/*",
     "https://chat.deepseek.com/*",
+    "https://grok.com/*",
+    "https://gemini.google.com/*",
+    "https://huggingface.co/*",
     "https://api.anthropic.com/*",
     "https://api.openai.com/*"
   ],

@@ -19,9 +19,17 @@ import {
   perplexityThreadIdFromUrl,
   captureDeepSeekConversation,
   deepseekSessionIdFromUrl,
+  captureGrokConversation,
+  grokConversationIdFromUrl,
+  captureHfConversation,
+  hfConversationIdFromUrl,
+  captureGeminiConversation,
+  geminiConversationIdFromUrl,
   transcriptFromMessages,
   type FetchLike,
+  type GeminiTokens,
   type NormalizedTranscript,
+  type PostFetch,
   type SimpleMessage,
 } from "@promptfold/core";
 
@@ -178,11 +186,74 @@ const deepseekAdapter: CaptureAdapter = {
   },
 };
 
+// ── Grok: cookie-REST adapter (grok.com) ────────────────────────────────────
+const grokAdapter: CaptureAdapter = {
+  id: "grok",
+  source: "data layer",
+  matches: (h) => h === "grok.com" || h.endsWith(".grok.com"),
+  async capture(capturedAt) {
+    const id = grokConversationIdFromUrl(location.href);
+    if (!id) throw new Error("Open a Grok conversation first, then click Fold.");
+    return captureGrokConversation(id, { fetchImpl, capturedAt, baseUrl: location.origin });
+  },
+};
+
+// ── HuggingFace Chat: cookie-REST adapter ───────────────────────────────────
+const hfAdapter: CaptureAdapter = {
+  id: "huggingface",
+  source: "data layer",
+  matches: (h) => h === "huggingface.co" || h.endsWith(".huggingface.co"),
+  async capture(capturedAt) {
+    const id = hfConversationIdFromUrl(location.href);
+    if (!id) throw new Error("Open a HuggingFace chat first, then click Fold.");
+    // chat-ui is under /chat on huggingface.co; self-hosted forks use no prefix.
+    const basePath = location.hostname === "huggingface.co" ? "/chat" : "";
+    return captureHfConversation(id, { fetchImpl, capturedAt, baseUrl: location.origin, basePath });
+  },
+};
+
+// ── Gemini: batchexecute RPC adapter (experimental) ─────────────────────────
+const postFetch: PostFetch = (url, init) => fetch(url, init as RequestInit);
+
+/** Read Gemini's page tokens out of the inline WIZ_global_data script. */
+function geminiTokens(): GeminiTokens | null {
+  const html = document.documentElement.innerHTML;
+  const at = html.match(/"SNlM0e":\s*"(.*?)"/)?.[1];
+  if (!at) return null;
+  return {
+    at,
+    ...(html.match(/"cfb2h":\s*"(.*?)"/)?.[1] ? { bl: html.match(/"cfb2h":\s*"(.*?)"/)![1] } : {}),
+    ...(html.match(/"FdrFJe":\s*"(.*?)"/)?.[1] ? { fsid: html.match(/"FdrFJe":\s*"(.*?)"/)![1] } : {}),
+    ...(html.match(/"TuX5cc":\s*"(.*?)"/)?.[1] ? { hl: html.match(/"TuX5cc":\s*"(.*?)"/)![1] } : {}),
+  };
+}
+
+const geminiAdapter: CaptureAdapter = {
+  id: "gemini",
+  source: "data layer",
+  matches: (h) => h === "gemini.google.com",
+  async capture(capturedAt) {
+    const cid = geminiConversationIdFromUrl(location.href);
+    if (!cid) throw new Error("Open a saved Gemini conversation first, then click Fold.");
+    const tokens = geminiTokens();
+    if (!tokens) throw new Error("Could not read Gemini session tokens from the page.");
+    return captureGeminiConversation(cid, {
+      post: postFetch,
+      tokens,
+      capturedAt,
+      reqid: 100000 + Math.floor(Math.random() * 900000),
+    });
+  },
+};
+
 const ADAPTERS: CaptureAdapter[] = [
   claudeAdapter,
   chatgptAdapter,
   perplexityAdapter,
   deepseekAdapter,
+  grokAdapter,
+  hfAdapter,
+  geminiAdapter,
   /* add precise adapters here */
 ];
 

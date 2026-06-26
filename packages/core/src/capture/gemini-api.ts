@@ -1,0 +1,165 @@
+/**
+ * Google Gemini (gemini.google.com) data-layer client + normalizer.
+ *
+ * Gemini has no clean JSON API. It uses Google's batchexecute RPC, which a
+ * content script CAN replay because the tokens live on the page:
+ *   - `at` token        = window.WIZ_global_data["SNlM0e"]
+ *   - build label `bl`  = window.WIZ_global_data["cfb2h"]
+ * The read-conversation RPC id is "hNvQHb". The response is Google's framed,
+ * index-addressed array format (no field names), so parsing is positional and
+ * version-fragile. If anything shifts, the adapter falls back to the screen
+ * reader. EXPERIMENTAL by nature; the other adapters are far more stable.
+ *
+ * Verified against HanaokaYuzu/Gemini-API (chat_mixin.py, parsing.py).
+ */
+
+import type { NormalizedMessage, NormalizedTranscript } from "../types.js";
+import { CaptureError } from "./claude-api.js";
+
+const BATCH = "https://gemini.google.com/_/BardChatUi/data/batchexecute";
+const READ_CHAT = "hNvQHb";
+
+export interface GeminiTokens {
+  at: string; // SNlM0e
+  bl?: string; // cfb2h build label
+  fsid?: string; // FdrFJe
+  hl?: string; // TuX5cc language
+}
+
+interface PostResponse {
+  ok: boolean;
+  status: number;
+  text: () => Promise<string>;
+}
+export type PostFetch = (
+  url: string,
+  init: {
+    method: string;
+    headers: Record<string, string>;
+    body: string;
+    credentials: "include";
+  },
+) => Promise<PostResponse>;
+
+/** Read a Gemini conversation id from a URL (gemini.google.com/app/{cid}). */
+export function geminiConversationIdFromUrl(url: string): string | null {
+  const m = url.match(/\/app\/([a-z0-9_-]{6,})/i);
+  return m?.[1] ?? null;
+}
+
+/**
+ * De-frame a batchexecute response and return the payload of the first frame
+ * matching `rpcid`. The response starts with )]}' then length-prefixed lines;
+ * we parse forgivingly by trying each line as JSON rather than counting bytes.
+ */
+export function extractRpcPayload(text: string, rpcid: string): unknown | null {
+  const cleaned = text.replace(/^\)\]\}'/, "");
+  for (const line of cleaned.split("\n")) {
+    const t = line.trim();
+    if (!t.startsWith("[")) continue;
+    let frames: unknown;
+    try {
+      frames = JSON.parse(t);
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(frames)) continue;
+    for (const frame of frames) {
+      if (
+        Array.isArray(frame) &&
+        frame[0] === "wrb.fr" &&
+        frame[1] === rpcid &&
+        typeof frame[2] === "string"
+      ) {
+        try {
+          return JSON.parse(frame[2]);
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function str(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+
+/** Parse the read-chat payload into messages. Positional access (no field names). */
+export function normalizeGeminiPayload(
+  payload: unknown,
+  opts: { capturedAt: string },
+): NormalizedTranscript {
+  const messages: NormalizedMessage[] = [];
+  const turns = (payload as unknown[])?.[0];
+  if (Array.isArray(turns)) {
+    for (const turn of turns) {
+      const t = turn as unknown[];
+      // user message text -> conv_turn[2][0][0]
+      const userText = str((((t?.[2] as unknown[])?.[0]) as unknown[])?.[0]);
+      if (userText) messages.push({ uuid: `gm-${messages.length}`, role: "human", text: userText });
+      // model candidate -> conv_turn[3][0]; text -> candidate[1][0]
+      const candidate = ((t?.[3] as unknown[])?.[0]) as unknown[];
+      const modelText = str(((candidate?.[1] as unknown[])?.[0]) ?? "");
+      if (modelText) messages.push({ uuid: `gm-${messages.length}`, role: "assistant", text: modelText });
+    }
+  }
+  return {
+    conversationId: "gemini",
+    title: "Gemini conversation",
+    capturedAt: opts.capturedAt,
+    messages,
+    artifacts: [],
+    uploads: [],
+    integrity: {
+      totalBlocks: messages.length,
+      classifiedBlocks: messages.length,
+      unknown: [],
+      complete: true,
+    },
+  };
+}
+
+export interface CaptureGeminiOptions {
+  post: PostFetch;
+  tokens: GeminiTokens;
+  capturedAt: string;
+  /** Pseudo-random request id; injected so core stays deterministic in tests. */
+  reqid?: number;
+}
+
+export async function captureGeminiConversation(
+  cid: string,
+  opts: CaptureGeminiOptions,
+): Promise<NormalizedTranscript> {
+  const inner = JSON.stringify([cid, 10, null, 1, [1], [4], null, 1]);
+  const fReq = JSON.stringify([[[READ_CHAT, inner, null, "generic"]]]);
+  const params = new URLSearchParams({
+    rpcids: READ_CHAT,
+    "source-path": "/app",
+    ...(opts.tokens.bl ? { bl: opts.tokens.bl } : {}),
+    ...(opts.tokens.fsid ? { "f.sid": opts.tokens.fsid } : {}),
+    ...(opts.tokens.hl ? { hl: opts.tokens.hl } : {}),
+    _reqid: String(opts.reqid ?? 100000),
+    rt: "c",
+  });
+  const body = new URLSearchParams({ "f.req": fReq, at: opts.tokens.at }).toString();
+
+  const res = await opts.post(`${BATCH}?${params.toString()}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded;charset=utf-8",
+      "x-same-domain": "1",
+      "x-goog-ext-73010989-jspb": "[0]",
+    },
+    body,
+  });
+  if (!res.ok) throw new CaptureError(`Gemini RPC returned ${res.status}.`);
+  const payload = extractRpcPayload(await res.text(), READ_CHAT);
+  if (!payload) throw new CaptureError("Gemini response shape not recognized.");
+  const t = normalizeGeminiPayload(payload, { capturedAt: opts.capturedAt });
+  if (t.messages.length === 0) throw new CaptureError("No Gemini messages parsed.");
+  return t;
+}

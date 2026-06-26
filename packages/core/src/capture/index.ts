@@ -39,3 +39,24 @@ export {
   deepseekSessionIdFromUrl,
   type CaptureDeepSeekOptions,
 } from "./deepseek-api.js";
+export {
+  captureGrokConversation,
+  normalizeGrok,
+  grokConversationIdFromUrl,
+  type CaptureGrokOptions,
+} from "./grok-api.js";
+export {
+  captureHfConversation,
+  normalizeHfConversation,
+  hfConversationIdFromUrl,
+  type CaptureHfOptions,
+} from "./hf-chat-api.js";
+export {
+  captureGeminiConversation,
+  normalizeGeminiPayload,
+  extractRpcPayload,
+  geminiConversationIdFromUrl,
+  type CaptureGeminiOptions,
+  type GeminiTokens,
+  type PostFetch,
+} from "./gemini-api.js";
