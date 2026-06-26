@@ -136,6 +136,7 @@ async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
     source,
     savedAt,
     onRegenerate: () => void generate(shadow, button),
+    onOpenSettings: openSettings,
   });
 }
 
@@ -151,6 +152,7 @@ async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
       source: cached.source,
       savedAt: cached.savedAt,
       onRegenerate: () => void generate(shadow, button),
+      onOpenSettings: openSettings,
     });
     return;
   }

@@ -213,13 +213,15 @@ export interface BriefDrawerOptions {
   source: string;
   savedAt: string;
   onRegenerate: () => void;
+  /** Open the extension settings (change key/model) without leaving the page. */
+  onOpenSettings: () => void;
 }
 
 export function openBriefDrawer(
   shadow: ShadowRoot,
   opts: BriefDrawerOptions,
 ): DrawerHandle {
-  const { state, framings, source, savedAt, onRegenerate } = opts;
+  const { state, framings, source, savedAt, onRegenerate, onOpenSettings } = opts;
   const title = state.meta.title;
   const { drawer, destroy } = shell(
     shadow,
@@ -269,9 +271,12 @@ export function openBriefDrawer(
   const txtBtn = el("button", "cb-btn ghost", "Text");
   const pdfBtn = el("button", "cb-btn ghost", "PDF");
   const regenBtn = el("button", "cb-btn ghost", "Regenerate");
+  const settingsBtn = el("button", "cb-btn ghost", "⚙ Settings");
   const toast = el("div", "cb-toast", "Copied ✓");
-  actions.append(copyBtn, mdBtn, txtBtn, pdfBtn, regenBtn, toast);
+  actions.append(copyBtn, mdBtn, txtBtn, pdfBtn, regenBtn, settingsBtn, toast);
   foot.appendChild(actions);
+
+  settingsBtn.addEventListener("click", () => onOpenSettings());
 
   checkbox.addEventListener("change", () => {
     includeFraming = checkbox.checked;
