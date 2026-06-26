@@ -51,6 +51,24 @@ function text(m: PplxMessage): string {
   return typeof t === "string" ? t.trim() : "";
 }
 
+/** Perplexity's source cards are separate arrays, not in the answer text. */
+function sources(m: PplxMessage): string {
+  const arrays = [m["search_results"], m["web_results"], m["sources"], m["citations"]];
+  const lines: string[] = [];
+  const seen = new Set<string>();
+  for (const arr of arrays) {
+    if (!Array.isArray(arr)) continue;
+    for (const s of arr as Array<Record<string, unknown>>) {
+      const url = typeof s === "string" ? s : (s?.["url"] ?? s?.["link"]);
+      if (typeof url !== "string" || seen.has(url)) continue;
+      seen.add(url);
+      const title = typeof s === "object" ? (s["title"] ?? s["name"] ?? url) : url;
+      lines.push(`- ${title}: ${url}`);
+    }
+  }
+  return lines.length ? `\n\nSources:\n${lines.join("\n")}` : "";
+}
+
 export function normalizePerplexityThread(
   thread: PplxThread,
   opts: { capturedAt: string },
@@ -61,8 +79,8 @@ export function normalizePerplexityThread(
     // A Perplexity "entry" can pack both the user query and the answer.
     const q = typeof m.query === "string" ? m.query.trim() : "";
     if (q) messages.push({ uuid: `pplx-${messages.length}`, role: "human", text: q });
-    const body = text({ ...m, query: undefined });
-    if (body) messages.push({ uuid: `pplx-${messages.length}`, role: role(m), text: body });
+    const body = text({ ...m, query: undefined }) + sources(m);
+    if (body.trim()) messages.push({ uuid: `pplx-${messages.length}`, role: role(m), text: body });
   }
   return {
     conversationId: thread.slug ?? "perplexity",

@@ -37,6 +37,23 @@ describe("normalizePerplexityThread", () => {
     expect(t.messages[1]?.text).toContain("relational");
   });
 
+  it("appends source cards (search_results) to the answer", () => {
+    const t = normalizePerplexityThread(
+      {
+        chat_messages: [
+          {
+            sender: "assistant",
+            text: "Liquid IV has additives; LMNT does not.",
+            search_results: [{ title: "LMNT", url: "https://drinklmnt.com" }],
+          },
+        ],
+      },
+      { capturedAt: AT },
+    );
+    expect(t.messages[0]?.text).toContain("Sources:");
+    expect(t.messages[0]?.text).toContain("https://drinklmnt.com");
+  });
+
   it("splits an entry that packs both query and answer", () => {
     const t = normalizePerplexityThread(
       { chat_messages: [{ query: "what is BSB?", answer: "Bank-State-Branch code" }] },

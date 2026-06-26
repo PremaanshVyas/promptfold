@@ -47,6 +47,20 @@ describe("normalizeGeminiPayload", () => {
   });
 });
 
+describe("normalizeGeminiPayload — canvas document at candidate[30]", () => {
+  it("captures the canvas/immersive doc body as an artifact", () => {
+    const docBody =
+      "# Electrolyte comparison\n\n| Brand | Sodium | Additives |\n| --- | --- | --- |\n| Liquid IV | 500mg | yes |\n| LMNT | 1000mg | no |";
+    const candidate = [null, ["Here's the document I made."], null, null, null, null, null, null];
+    candidate[30] = [["doc-id"], [docBody]]; // canvas body lives in [30], nested
+    const turn = [null, null, [["compare electrolyte drinks"]], [candidate]];
+    const t = normalizeGeminiPayload([[turn]], { capturedAt: AT });
+    expect(t.artifacts).toHaveLength(1);
+    expect(t.artifacts[0]?.content).toContain("LMNT");
+    expect(t.artifacts[0]?.presented).toBe(true);
+  });
+});
+
 describe("captureGeminiConversation (fake network)", () => {
   it("posts the read-chat RPC and parses the reply", async () => {
     const turn = [null, null, [["hi"]], [[null, ["hello"]]]];

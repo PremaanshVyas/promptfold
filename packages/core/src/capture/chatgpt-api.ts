@@ -34,6 +34,8 @@ interface GptMessage {
   metadata?: {
     is_visually_hidden_from_conversation?: boolean;
     canvas?: { textdoc_id?: string; textdoc_type?: string; title?: string };
+    content_references?: Array<{ items?: Array<{ title?: string; url?: string }> }>;
+    citations?: Array<{ metadata?: { title?: string; url?: string } }>;
   };
 }
 interface GptNode {
@@ -215,6 +217,23 @@ function applyCanvasNode(docs: Map<string, Doc>, msg: GptMessage): void {
   // comment_textdoc and others: ignored.
 }
 
+/** Source/citation cards live in metadata, not the answer text. Append them. */
+function sourcesOf(msg: GptMessage): string {
+  const out = new Map<string, string>(); // url -> title
+  for (const ref of msg.metadata?.content_references ?? []) {
+    for (const it of ref.items ?? []) {
+      if (it.url) out.set(it.url, it.title ?? it.url);
+    }
+  }
+  for (const c of msg.metadata?.citations ?? []) {
+    const u = c.metadata?.url;
+    if (u) out.set(u, c.metadata?.title ?? u);
+  }
+  if (out.size === 0) return "";
+  const lines = [...out].map(([url, title]) => `- ${title}: ${url}`);
+  return `\n\nSources:\n${lines.join("\n")}`;
+}
+
 export interface NormalizeChatGptOptions {
   capturedAt: string;
 }
@@ -241,8 +260,8 @@ export function normalizeChatGptConversation(
 
     // Only visible user/assistant prose (recipient "all" or unset).
     if ((role === "user" || role === "assistant") && (msg.recipient ?? "all") === "all") {
-      const text = extractText(msg.content);
-      if (text.length > 0) {
+      const text = extractText(msg.content) + sourcesOf(msg);
+      if (text.trim().length > 0) {
         messages.push({
           uuid: msg.id ?? node.id ?? `gpt-${messages.length}`,
           role: toRole(role),

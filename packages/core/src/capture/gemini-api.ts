@@ -13,7 +13,7 @@
  * Verified against HanaokaYuzu/Gemini-API (chat_mixin.py, parsing.py).
  */
 
-import type { NormalizedMessage, NormalizedTranscript } from "../types.js";
+import type { Artifact, NormalizedMessage, NormalizedTranscript } from "../types.js";
 import { CaptureError } from "./claude-api.js";
 
 const BATCH = "https://gemini.google.com/_/BardChatUi/data/batchexecute";
@@ -96,6 +96,32 @@ function candidateText(candidate: unknown[]): string {
   return card || primary;
 }
 
+/** The longest string anywhere inside a value (for the canvas doc at [30]). */
+function deepLongestString(v: unknown): string {
+  let best = "";
+  const walk = (x: unknown): void => {
+    if (typeof x === "string") {
+      if (x.length > best.length) best = x;
+    } else if (Array.isArray(x)) {
+      for (const e of x) walk(e);
+    }
+  };
+  walk(v);
+  return best;
+}
+
+/**
+ * Canvas / "Immersive" document body lives at candidate[30] (a nested array the
+ * library never parses). We pull the document text out best-effort so its tables
+ * and code are not lost. Returns the doc text, or "".
+ */
+function canvasDoc(candidate: unknown[]): string {
+  const block = candidate?.[30];
+  if (!block) return "";
+  const text = deepLongestString(block);
+  return text.length > 60 ? text.trim() : "";
+}
+
 /**
  * Parse the read-chat payload into messages. Positional access (no field names).
  * Turns come newest-first from the server, so we reverse to chronological order.
@@ -105,6 +131,7 @@ export function normalizeGeminiPayload(
   opts: { capturedAt: string },
 ): NormalizedTranscript {
   const messages: NormalizedMessage[] = [];
+  const artifacts: Artifact[] = [];
   const turns = (payload as unknown[])?.[0];
   if (Array.isArray(turns)) {
     for (const turn of [...turns].reverse()) {
@@ -116,6 +143,18 @@ export function normalizeGeminiPayload(
       const candidate = ((t?.[3] as unknown[])?.[0]) as unknown[];
       const modelText = candidateText(candidate);
       if (modelText) messages.push({ uuid: `gm-${messages.length}`, role: "assistant", text: modelText });
+      // canvas / immersive document body -> candidate[30]
+      const doc = canvasDoc(candidate);
+      if (doc) {
+        artifacts.push({
+          id: `artifact-${artifacts.length + 1}`,
+          filename: `gemini-canvas-${artifacts.length + 1}.md`,
+          content: doc,
+          format: "tool_use",
+          messageUuid: "gemini-canvas",
+          presented: true,
+        });
+      }
     }
   }
   return {
@@ -123,11 +162,11 @@ export function normalizeGeminiPayload(
     title: "Gemini conversation",
     capturedAt: opts.capturedAt,
     messages,
-    artifacts: [],
+    artifacts,
     uploads: [],
     integrity: {
-      totalBlocks: messages.length,
-      classifiedBlocks: messages.length,
+      totalBlocks: messages.length + artifacts.length,
+      classifiedBlocks: messages.length + artifacts.length,
       unknown: [],
       complete: true,
     },
