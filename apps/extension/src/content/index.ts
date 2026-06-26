@@ -14,7 +14,12 @@ import {
   conversationIdFromUrl,
   type FetchLike,
 } from "@carrybot/core";
-import type { WorkerResponse } from "../shared/messages.js";
+import type {
+  DistillResponse,
+  ErrorResponse,
+  ProgressResponse,
+  WorkerResponse,
+} from "../shared/messages.js";
 import { STYLES } from "./styles.js";
 import { openDrawer, type DrawerHandle } from "./drawer.js";
 
@@ -40,6 +45,33 @@ function mountHost(): ShadowRoot {
 
 let openHandle: DrawerHandle | null = null;
 
+/** Send the transcript to the worker over a port and stream progress back. */
+function distillViaPort(
+  transcript: unknown,
+  onProgress: (p: ProgressResponse) => void,
+): Promise<DistillResponse | ErrorResponse> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const port = chrome.runtime.connect({ name: "carrybot" });
+    port.onMessage.addListener((msg: WorkerResponse) => {
+      if (msg.type === "progress") {
+        onProgress(msg);
+        return;
+      }
+      settled = true;
+      resolve(msg);
+      port.disconnect();
+    });
+    port.onDisconnect.addListener(() => {
+      if (!settled) {
+        settled = true;
+        resolve({ type: "error", message: "Background worker disconnected." });
+      }
+    });
+    port.postMessage({ type: "distill", transcript });
+  });
+}
+
 async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
   const convoId = conversationIdFromUrl(location.href);
   if (!convoId) {
@@ -59,10 +91,12 @@ async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
     });
 
     button.textContent = "Distilling…";
-    const resp = (await chrome.runtime.sendMessage({
-      type: "distill",
-      transcript,
-    })) as WorkerResponse;
+    const resp = await distillViaPort(transcript, (p) => {
+      button.textContent =
+        p.phase === "merging"
+          ? "Merging…"
+          : `Distilling ${p.done}/${p.total}…`;
+    });
 
     if (resp.type === "error") {
       alert("carrybot: " + resp.message);

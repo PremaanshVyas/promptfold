@@ -11,6 +11,10 @@ export {
   type ChunkOptions,
 } from "./chunk.js";
 export {
+  collapseArtifactLineage,
+  DEFAULT_LINEAGE_THRESHOLD,
+} from "./dedupe.js";
+export {
   makeLlmClient,
   DEFAULT_MODELS,
   LlmError,

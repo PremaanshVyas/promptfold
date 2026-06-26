@@ -16,6 +16,7 @@ import type {
   NormalizedTranscript,
   VerbatimItem,
 } from "../types.js";
+import { collapseArtifactLineage } from "./dedupe.js";
 
 /** Above this, code is better attached as a file than pasted inline. */
 const BIG_CODE_CHARS = 1500;
@@ -45,13 +46,13 @@ function artifactLabel(a: Artifact): string {
 }
 
 /** Split artifacts into small (inline verbatim) and big (attach as file). */
-function fromArtifacts(transcript: NormalizedTranscript): {
+function fromArtifacts(artifacts: Artifact[]): {
   verbatim: VerbatimItem[];
   files: FileToAttach[];
 } {
   const verbatim: VerbatimItem[] = [];
   const files: FileToAttach[] = [];
-  for (const a of transcript.artifacts) {
+  for (const a of artifacts) {
     if (a.content.length > BIG_CODE_CHARS) {
       files.push({
         name: a.filename ?? `${a.title ?? "artifact-" + a.id}`,
@@ -143,7 +144,9 @@ export function distillDeterministic(
   transcript: NormalizedTranscript,
   opts: DeterministicOptions = {},
 ): BriefState {
-  const fromArt = fromArtifacts(transcript);
+  // Collapse evolving draft lineages to the latest version before listing them.
+  const artifacts = collapseArtifactLineage(transcript.artifacts);
+  const fromArt = fromArtifacts(artifacts);
   const verbatim = dedupe(
     [
       ...fromArt.verbatim,

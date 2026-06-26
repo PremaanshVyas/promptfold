@@ -24,6 +24,29 @@ import {
 export interface DistillOptions extends ChunkOptions {
   /** Carried into the brief so the UI can show provenance + warn loudly. */
   capturedAtNote?: string;
+  /** Live progress for the UI: phase is "distilling" | "merging". */
+  onProgress?: (done: number, total: number, phase: string) => void;
+  /** How many chunk calls to run at once. Default 4. */
+  concurrency?: number;
+}
+
+/** Run `task` over `items` with at most `limit` in flight; preserves order. */
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await task(items[i]!, i);
+    }
+  }
+  const n = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: n }, () => worker()));
+  return results;
 }
 
 export interface DistillResult {
@@ -53,25 +76,38 @@ export async function distillWithModel(
     };
   }
 
-  // 1) Distill each chunk into a mini-brief (raw JSON string).
+  // 1) Distill each chunk into a mini-brief, running several at once so a long
+  // chat finishes in seconds, not minutes. Order is preserved for the merge.
+  let completed = 0;
+  opts.onProgress?.(0, chunks.length, "distilling");
+  const perChunk = await mapLimit(
+    chunks,
+    opts.concurrency ?? 4,
+    async (chunk, i) => {
+      try {
+        const out = await client.complete({
+          system: chunkSystemPrompt(),
+          user: chunkUserPrompt(chunk, i, chunks.length),
+          json: true,
+        });
+        parseBriefSections(out); // validate it parses
+        return { ok: true as const, out };
+      } catch (err) {
+        return { ok: false as const, message: (err as Error).message, index: i };
+      } finally {
+        completed += 1;
+        opts.onProgress?.(completed, chunks.length, "distilling");
+      }
+    },
+  );
+
   const miniBriefs: string[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const out = await client.complete({
-      system: chunkSystemPrompt(),
-      user: chunkUserPrompt(chunks[i] ?? "", i, chunks.length),
-      json: true,
-    });
-    // Validate it parses; if not, record loudly but keep going.
-    try {
-      parseBriefSections(out);
-      miniBriefs.push(out);
-    } catch (err) {
+  for (const r of perChunk) {
+    if (r.ok) miniBriefs.push(r.out);
+    else
       rawFallbacks.push(
-        `Chunk ${i + 1}/${chunks.length} did not parse (${
-          (err as Error).message
-        }); its raw model output was kept out of the merge.`,
+        `Chunk ${r.index + 1}/${chunks.length} did not parse (${r.message}); its raw model output was kept out of the merge.`,
       );
-    }
   }
 
   // 2) Merge (or take the single mini-brief). Enforce latest-state-wins.
@@ -95,11 +131,13 @@ export async function distillWithModel(
   } else if (miniBriefs.length === 1) {
     finalSections = parseBriefSections(miniBriefs[0] ?? "");
   } else {
+    opts.onProgress?.(0, 1, "merging");
     const merged = await client.complete({
       system: mergeSystemPrompt(),
       user: mergeUserPrompt(miniBriefs),
       json: true,
     });
+    opts.onProgress?.(1, 1, "merging");
     try {
       finalSections = parseBriefSections(merged);
     } catch (err) {

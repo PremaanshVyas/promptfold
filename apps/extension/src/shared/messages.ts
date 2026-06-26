@@ -22,9 +22,16 @@ export interface DistillResponse {
   producedBy: string;
 }
 
+export interface ProgressResponse {
+  type: "progress";
+  done: number;
+  total: number;
+  phase: string;
+}
+
 export interface ErrorResponse {
   type: "error";
   message: string;
 }
 
-export type WorkerResponse = DistillResponse | ErrorResponse;
+export type WorkerResponse = DistillResponse | ProgressResponse | ErrorResponse;

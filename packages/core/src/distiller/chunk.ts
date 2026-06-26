@@ -8,9 +8,10 @@
  */
 
 import type { NormalizedTranscript } from "../types.js";
+import { collapseArtifactLineage } from "./dedupe.js";
 
-/** Roughly 4 chars/token; 12k chars ≈ 3k tokens of input per chunk. */
-export const DEFAULT_CHUNK_CHARS = 12_000;
+/** Roughly 4 chars/token; 16k chars ≈ 4k tokens of input per chunk. */
+export const DEFAULT_CHUNK_CHARS = 16_000;
 
 function renderMessage(role: string, text: string): string {
   const who = role === "assistant" ? "Assistant" : "User";
@@ -26,7 +27,7 @@ export function renderTranscriptText(transcript: NormalizedTranscript): string {
   for (const m of transcript.messages) {
     if (m.text.length > 0) parts.push(renderMessage(m.role, m.text));
   }
-  for (const a of transcript.artifacts) {
+  for (const a of collapseArtifactLineage(transcript.artifacts)) {
     const name = a.filename ?? a.title ?? a.id;
     parts.push(
       `### Artifact: ${name}${a.language ? ` (${a.language})` : ""}\n` +
@@ -57,7 +58,7 @@ export function chunkTranscript(
   for (const m of transcript.messages) {
     if (m.text.length > 0) units.push(renderMessage(m.role, m.text));
   }
-  for (const a of transcript.artifacts) {
+  for (const a of collapseArtifactLineage(transcript.artifacts)) {
     const name = a.filename ?? a.title ?? a.id;
     units.push(
       `### Artifact: ${name}${a.language ? ` (${a.language})` : ""}\n` +
