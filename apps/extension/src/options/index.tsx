@@ -2,12 +2,12 @@
  * Options page (React). BYOK settings.
  *
  * The key is stored with chrome.storage.local on this machine and is sent only
- * to the provider the user picks. There is no carrybot account and no server.
+ * to the provider the user picks. There is no PromptFold account and no server.
  */
 
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { DEFAULT_MODELS, type Provider } from "@carrybot/core";
+import { DEFAULT_MODELS, type Provider } from "@promptfold/core";
 import {
   loadSettings,
   saveSettings,
@@ -83,10 +83,10 @@ function Options() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>carrybot settings</h1>
+      <h1 style={{ fontSize: 22, marginBottom: 4 }}>PromptFold settings</h1>
       <p style={{ color: "#7a766d", marginTop: 0 }}>
         Bring your own key. It is stored on this machine and sent only to the
-        provider you choose, there is no carrybot account and no server.
+        provider you choose, there is no PromptFold account and no server.
       </p>
 
       <div style={card}>
@@ -146,7 +146,7 @@ function Options() {
 
       <p style={{ fontSize: 12, color: "#9a958b", marginTop: 24 }}>
         Privacy: your chat is read locally in your browser and sent only to your
-        chosen AI provider with your key. carrybot has no middleman server.
+        chosen AI provider with your key. PromptFold has no middleman server.
       </p>
     </div>
   );

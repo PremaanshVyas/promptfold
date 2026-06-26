@@ -18,7 +18,7 @@ const hooksDir = join(gitDir, "hooks");
 mkdirSync(hooksDir, { recursive: true });
 
 const hook = `#!/bin/sh
-# carrybot pre-commit hook, blocks committing secrets.
+# promptfold pre-commit hook, blocks committing secrets.
 node "./scripts/secret-scan.mjs" || exit 1
 `;
 

@@ -1,8 +1,8 @@
 {
-  "name": "@carrybot/extension",
+  "name": "@promptfold/extension",
   "version": "0.1.0",
   "private": true,
-  "description": "carrybot MV3 Chrome extension, one-click context handoff inside Claude.ai.",
+  "description": "promptfold MV3 Chrome extension, one-click context handoff inside Claude.ai.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -11,7 +11,7 @@
     "lint": "eslint src --max-warnings=0"
   },
   "dependencies": {
-    "@carrybot/core": "workspace:*",
+    "@promptfold/core": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

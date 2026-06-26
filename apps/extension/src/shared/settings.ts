@@ -3,10 +3,10 @@
  *
  * The API key lives here, on the user's machine, and is read ONLY by the
  * service worker when making the LLM call. It is never logged, never sent to
- * any carrybot server (there is none), and never injected into the page.
+ * any PromptFold server (there is none), and never injected into the page.
  */
 
-import type { Provider } from "@carrybot/core";
+import type { Provider } from "@promptfold/core";
 
 export interface Settings {
   provider: Provider;
@@ -14,7 +14,7 @@ export interface Settings {
   model: string;
 }
 
-const KEY = "carrybot.settings";
+const KEY = "promptfold.settings";
 
 export const DEFAULT_SETTINGS: Settings = {
   provider: "anthropic",

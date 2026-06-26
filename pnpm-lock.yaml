@@ -17,7 +17,7 @@ importers:
 
   apps/extension:
     dependencies:
-      '@carrybot/core':
+      '@promptfold/core':
         specifier: workspace:*
         version: link:../../packages/core
       react:
@@ -79,7 +79,7 @@ importers:
 
   eval:
     dependencies:
-      '@carrybot/core':
+      '@promptfold/core':
         specifier: workspace:*
         version: link:../packages/core
     devDependencies:

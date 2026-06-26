@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@carrybot/core": resolve(__dirname, "../packages/core/src/index.ts"),
+      "@promptfold/core": resolve(__dirname, "../packages/core/src/index.ts"),
     },
   },
   test: {

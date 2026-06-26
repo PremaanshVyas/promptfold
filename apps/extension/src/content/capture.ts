@@ -1,5 +1,5 @@
 /**
- * Capture adapters. This is what makes carrybot NOT hardcoded to one platform.
+ * Capture adapters. This is what makes PromptFold NOT hardcoded to one platform.
  *
  *   pickAdapter(hostname) -> the best adapter for the current site
  *     claude.ai      -> ClaudeAdapter   (reads the data layer; perfect, artifacts)
@@ -21,7 +21,7 @@ import {
   type FetchLike,
   type NormalizedTranscript,
   type SimpleMessage,
-} from "@carrybot/core";
+} from "@promptfold/core";
 
 export type CaptureSource = "data layer" | "screen";
 
@@ -44,7 +44,7 @@ const claudeAdapter: CaptureAdapter = {
   async capture(capturedAt) {
     const convoId = conversationIdFromUrl(location.href);
     if (!convoId) {
-      throw new Error("Open a Claude conversation first, then click Carry.");
+      throw new Error("Open a Claude conversation first, then click Fold.");
     }
     return captureConversation(convoId, { fetchImpl, capturedAt });
   },
@@ -107,7 +107,7 @@ const genericDomAdapter: CaptureAdapter = {
     const msgs = extractDomMessages();
     if (msgs.length < 2) {
       throw new Error(
-        "carrybot could not find a conversation on this page. It works best on " +
+        "PromptFold could not find a conversation on this page. It works best on " +
           "supported chatbots; this site may use a layout it can't read yet.",
       );
     }
@@ -147,7 +147,7 @@ const perplexityAdapter: CaptureAdapter = {
   matches: (h) => h === "perplexity.ai" || h.endsWith(".perplexity.ai"),
   async capture(capturedAt) {
     const slug = perplexityThreadIdFromUrl(location.href);
-    if (!slug) throw new Error("Open a Perplexity thread first, then click Carry.");
+    if (!slug) throw new Error("Open a Perplexity thread first, then click Fold.");
     return capturePerplexityThread(slug, { fetchImpl, capturedAt, baseUrl: location.origin });
   },
 };

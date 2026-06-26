@@ -7,7 +7,7 @@
  *   - worker: the BYOK LLM call (so the API key stays out of the page context).
  */
 
-import type { BriefFramings, BriefState, NormalizedTranscript } from "@carrybot/core";
+import type { BriefFramings, BriefState, NormalizedTranscript } from "@promptfold/core";
 
 export interface DistillRequest {
   type: "distill";

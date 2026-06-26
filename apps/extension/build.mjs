@@ -9,7 +9,7 @@
  *
  * MV3 forbids remote code, so EVERYTHING is bundled, no CDN, no eval.
  *
- * A tiny resolver rewrites `./x.js` → `./x.ts`, because @carrybot/core is
+ * A tiny resolver rewrites `./x.js` → `./x.ts`, because @promptfold/core is
  * authored as TS with ESM-style .js import specifiers.
  */
 

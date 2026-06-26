@@ -1,5 +1,5 @@
 {
-  "name": "carrybot",
+  "name": "promptfold",
   "version": "0.1.0",
   "private": true,
   "description": "One-click context handoff from your AI chat, carry a conversation into a fresh chat, another chatbot, or a teammate's hands, losing nothing that matters.",
@@ -14,7 +14,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev",
-    "eval": "pnpm --filter @carrybot/eval start",
+    "eval": "pnpm --filter @promptfold/eval start",
     "prepare": "node ./scripts/install-git-hooks.mjs"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 /**
  * BYOK LLM client, provider-agnostic interface plus Anthropic and OpenAI
  * adapters. The key lives on the user's machine and is sent ONLY to the
- * provider the user chose. carrybot never proxies it.
+ * provider the user chose. promptfold never proxies it.
  *
  * The interface is tiny on purpose so the orchestrator can be unit-tested with
  * a fake client (no network, no key).

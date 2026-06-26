@@ -1,5 +1,5 @@
 /**
- * carrybot UI styles, one coherent type scale, scoped inside a Shadow root so
+ * PromptFold UI styles, one coherent type scale, scoped inside a Shadow root so
  * nothing leaks in or out. Design goals from real-use feedback: consistent font
  * sizes (no mixed sizes on one line), readable contrast (not washed-out grey),
  * and a clear, organized layout you read before copying/exporting.

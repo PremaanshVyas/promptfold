@@ -1,6 +1,6 @@
-# carrybot
+# PromptFold
 
-**One-click context handoff from your AI chat.** carrybot lives inside Claude.ai.
+**One-click context handoff from your AI chat.** PromptFold lives inside Claude.ai.
 One click turns a long, messy conversation into a short, structured **brief**
 (Decided / Open / Rejected / Verbatim / Files-to-attach) that you can paste into
 a fresh chat, a different chatbot, or hand to a teammate, without losing anything
@@ -15,7 +15,7 @@ that matters.
 Long AI chats die. They get slow near their limit, the next person cannot read
 200 messages to catch up, and a fresh chatbot keeps re-suggesting ideas you
 already ruled out. Most tools "solve" this by dumping the raw transcript, which
-just moves the mess somewhere else. carrybot keeps the state and the decisions,
+just moves the mess somewhere else. PromptFold keeps the state and the decisions,
 not the mess.
 
 The shrinking is the value. It captures all 200 messages, then deliberately
@@ -23,11 +23,11 @@ produces something smaller.
 
 ## What makes it different
 
-The chat-export space is crowded, so carrybot is sharp about where it wins (see
-the [full competitive analysis](docs/superpowers/specs/2026-06-26-carrybot-design.md)):
+The chat-export space is crowded, so PromptFold is sharp about where it wins (see
+the [full competitive analysis](docs/superpowers/specs/2026-06-26-promptfold-design.md)):
 
 - **Rejected, with the reason why, as its own section.** The piece nobody else
-  carries. It is why fresh chatbots re-suggest dead ideas, and carrybot stops that.
+  carries. It is why fresh chatbots re-suggest dead ideas, and PromptFold stops that.
 - **A files-to-attach manifest**, each item with one line on why it matters,
   including files the chat only referred to but never contained.
 - **Latest state wins.** If a value changed over the chat (a word count of 750
@@ -58,7 +58,7 @@ framework-agnostic brain consumed by both the vanilla content script and the
 React web app.
 
 ```
-carrybot/
+PromptFold/
   packages/core/      framework-agnostic brain: capture, distiller, brief (Vitest)
   apps/extension/     MV3 extension: vanilla TS + Shadow DOM injected UI, React options
   apps/web/           Next.js + Tailwind: live eval-results viewer + landing
@@ -69,7 +69,7 @@ carrybot/
 Three boundaries, each testable on its own: **capture** (Claude data to a
 normalized transcript), **distiller** (transcript to brief state), **brief**
 (state to two text framings). The injected UI mounts in a Shadow DOM, so Claude's
-CSS and carrybot's never collide.
+CSS and PromptFold's never collide.
 
 ## The eval (the proof)
 
@@ -79,7 +79,7 @@ kept everything that mattered.
 
 ```bash
 pnpm eval                        # shape + size report (no key needed)
-CARRYBOT_API_KEY=... pnpm eval    # full same-next-move judgement
+PROMPTFOLD_API_KEY=... pnpm eval    # full same-next-move judgement
 ```
 
 Results land in [`eval/scorecard.md`](eval/scorecard.md) and render in the web
@@ -90,7 +90,7 @@ viewer.
 ```bash
 pnpm install
 pnpm test
-pnpm --filter @carrybot/extension build
+pnpm --filter @promptfold/extension build
 ```
 
 Then load the extension: open `chrome://extensions`, turn on **Developer mode**,
@@ -115,14 +115,14 @@ reads chat content. See [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
 Short version: the BYOK key lives in `chrome.storage.local` only, is never logged
 and never enters git (a secret-scan pre-commit hook and CI enforce that),
 permissions are least-privilege, there is no remote code, and there is no
-carrybot server.
+PromptFold server.
 
 ## Status
 
 v1 in progress: Claude only, Tier 0 and Tier 2, the full strict brief, the eval.
 The roadmap (ChatGPT and Gemini adapters, on-device Tier 1, the "simplify for a
 non-technical reader" button, share links) is in the
-[design spec](docs/superpowers/specs/2026-06-26-carrybot-design.md#15-scope).
+[design spec](docs/superpowers/specs/2026-06-26-promptfold-design.md#15-scope).
 
 ## License
 

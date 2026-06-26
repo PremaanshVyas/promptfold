@@ -10,7 +10,7 @@
  * this file is platform-agnostic.
  */
 
-import { renderTranscriptText, type NormalizedTranscript } from "@carrybot/core";
+import { renderTranscriptText, type NormalizedTranscript } from "@promptfold/core";
 import type {
   DistillResponse,
   ErrorResponse,
@@ -27,7 +27,7 @@ import {
 import { loadCachedBrief, saveCachedBrief } from "../shared/cache.js";
 import { pickAdapter, type CaptureSource } from "./capture.js";
 
-const HOST_ID = "carrybot-host";
+const HOST_ID = "promptfold-host";
 
 /** Stable per-conversation key for the cache, works on any site. */
 function cacheKey(): string {
@@ -56,7 +56,7 @@ function distillViaPort(
 ): Promise<DistillResponse | NeedsKeyResponse | ErrorResponse> {
   return new Promise((resolve) => {
     let settled = false;
-    const port = chrome.runtime.connect({ name: "carrybot" });
+    const port = chrome.runtime.connect({ name: "promptfold" });
     port.onMessage.addListener((msg: WorkerResponse) => {
       if (msg.type === "progress") {
         onProgress(msg);
@@ -91,7 +91,7 @@ async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
   try {
     transcript = await adapter.capture(new Date().toISOString());
   } catch (err) {
-    alert("carrybot: " + (err as Error).message);
+    alert("PromptFold: " + (err as Error).message);
     button.disabled = false;
     button.textContent = original;
     return;
@@ -115,7 +115,7 @@ async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
     return;
   }
   if (resp.type === "error") {
-    alert("carrybot: " + resp.message);
+    alert("PromptFold: " + resp.message);
     return;
   }
 
@@ -158,7 +158,7 @@ function injectButton(shadow: ShadowRoot) {
   if (shadow.querySelector(".cb-fab")) return;
   const button = document.createElement("button");
   button.className = "cb-fab";
-  button.textContent = "Carry ↗";
+  button.textContent = "Fold ↗";
   button.title = "Turn this chat into a handoff brief";
   button.addEventListener("click", () => void onCarryClick(shadow, button));
   shadow.appendChild(button);

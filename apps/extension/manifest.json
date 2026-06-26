@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "carrybot",
+  "name": "PromptFold",
   "version": "0.1.0",
   "description": "One click turns a long AI chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
   "permissions": ["storage", "activeTab", "scripting"],
@@ -40,6 +40,6 @@
   ],
   "options_page": "options.html",
   "action": {
-    "default_title": "carrybot settings"
+    "default_title": "PromptFold settings"
   }
 }

@@ -7,7 +7,7 @@
  * Nothing leaves the machine except the call to the user's chosen provider.
  */
 
-import { distillWithModel, makeLlmClient, renderBrief } from "@carrybot/core";
+import { distillWithModel, makeLlmClient, renderBrief } from "@promptfold/core";
 import type { DistillRequest, WorkerResponse } from "../shared/messages.js";
 import { loadSettings, hasKey } from "../shared/settings.js";
 
@@ -61,7 +61,7 @@ async function runDistill(
 }
 
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.name !== "carrybot") return;
+  if (port.name !== "promptfold") return;
   port.onMessage.addListener((message: unknown) => {
     const req = message as { type?: string };
     if (req?.type === "distill") {

@@ -36,7 +36,7 @@ jobs:
         run: pnpm test
 
       - name: Build extension
-        run: pnpm --filter @carrybot/extension build
+        run: pnpm --filter @promptfold/extension build
 
       - name: Eval (shape + size, no key)
         run: pnpm eval

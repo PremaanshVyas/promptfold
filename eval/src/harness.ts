@@ -1,7 +1,7 @@
 /**
  * The proof harness.
  *
- * Claim under test: a carrybot brief preserves everything *load-bearing* in a
+ * Claim under test: a promptfold brief preserves everything *load-bearing* in a
  * conversation. Method (spec §9): give a fresh model ONLY the brief, and
  * separately the FULL chat, ask both the same next question, and check whether
  * the brief-only answer makes the same next move as the full-chat answer. If it
@@ -22,7 +22,7 @@ import {
   type LlmClient,
   type BriefState,
   type ClaudeConversation,
-} from "@carrybot/core";
+} from "@promptfold/core";
 
 export interface Fixture {
   id: string;

@@ -1,8 +1,8 @@
 {
-  "name": "@carrybot/web",
+  "name": "@promptfold/web",
   "version": "0.1.0",
   "private": true,
-  "description": "Live eval-results viewer + landing for carrybot.",
+  "description": "Live eval-results viewer + landing for promptfold.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

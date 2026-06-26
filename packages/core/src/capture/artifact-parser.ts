@@ -1,5 +1,5 @@
 /**
- * Artifact parsing, the one part of carrybot that fights Claude's shifting,
+ * Artifact parsing, the one part of promptfold that fights Claude's shifting,
  * undocumented data format. Isolated here so it can be fixed without touching
  * anything else.
  *

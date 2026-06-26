@@ -1,4 +1,4 @@
-# carrybot. Product & Build Spec
+# PromptFold. Product & Build Spec
 
 > One-click context handoff from your AI chat. Carry a long, messy conversation
 > into a fresh chat, a different chatbot, or a teammate's hands, losing nothing
@@ -20,7 +20,7 @@ another chatbot, or hand to a teammate.
 Long AI chats die: slow near their limit, unreadable for the next person, and a
 fresh chatbot re-suggests dead ideas because it never saw what was ruled out.
 Existing tools dump the raw transcript, they move the mess, they don't remove
-it. carrybot keeps the *truth* (state + decisions), not the mess.
+it. PromptFold keeps the *truth* (state + decisions), not the mess.
 
 ## 3. Competitive reality (why this is still worth building)
 
@@ -31,7 +31,7 @@ Research found the space is more crowded than the original spec assumed:
 - **"Read the data layer, not the DOM" is table stakes**, not an edge, the
   100k-install incumbents already read the internal API.
 
-The genuinely unoccupied space carrybot wins on:
+The genuinely unoccupied space PromptFold wins on:
 
 1. **Strict packaging nobody ships together:** Rejected-**with-why** as a
    *discrete* section, byte-exact **Verbatim**, and a **files-to-attach
@@ -61,10 +61,10 @@ coding chat, a resume scorer, a marketing plan, a tutoring session, a plain Q&A,
 or a legal argument. Some sections are empty for some chats (a pure Q&A has no
 Rejected) and that is fine. Only the *contents* change with the subject matter.
 
-carrybot is a **summarizer, not an advisor**. The brief describes only where the
+PromptFold is a **summarizer, not an advisor**. The brief describes only where the
 conversation stands. It never recommends, suggests a next step, or adds an
 opinion. Advice the assistant gave and the user accepted is recorded as a
-decision or a verbatim value, attributed to the chat, not as carrybot's voice.
+decision or a verbatim value, attributed to the chat, not as PromptFold's voice.
 
 - **Now**, 1-3 plain present-tense sentences stating what is being worked on at
   the latest point. The orientation a new chatbot reads first. Carries chats that
@@ -160,7 +160,7 @@ Captured conversation → structured brief, via the user's BYOK model.
   re-explanations, "try this / no that failed" loops.
 - For each decision, record what it *replaced/ruled out* → keeps Rejected
   accurate.
-- **BYOK**, key in `chrome.storage.local`, on the user's machine only. carrybot
+- **BYOK**, key in `chrome.storage.local`, on the user's machine only. PromptFold
   never bills for tokens.
 
 ## 9. The eval (the portfolio centerpiece)
@@ -188,7 +188,7 @@ click, so sync solves a problem we don't have yet).
 ## 11. Architecture, one monorepo
 
 ```
-carrybot/                       (pnpm workspaces + Turborepo)
+PromptFold/                       (pnpm workspaces + Turborepo)
 ├── packages/core/      framework-agnostic TS brain, fully unit-tested (Vitest)
 │     src/capture/      Claude data-layer fetch + artifact parser  ← make-or-break
 │     src/distiller/    chunk → mini-brief → merge (latest-state-wins)

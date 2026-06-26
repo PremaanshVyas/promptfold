@@ -6,7 +6,7 @@
     "types": ["chrome", "react", "react-dom"],
     "noEmit": true,
     "paths": {
-      "@carrybot/core": ["../../packages/core/src/index.ts"]
+      "@promptfold/core": ["../../packages/core/src/index.ts"]
     }
   },
   "include": ["src/**/*", "build.mjs"],

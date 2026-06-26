@@ -1,5 +1,5 @@
 /**
- * Per-conversation brief cache. Reopening "Carry" on a chat you've already
+ * Per-conversation brief cache. Reopening "Fold" on a chat you've already
  * distilled should show the saved brief instantly (and let you Regenerate),
  * not silently re-run an expensive distill.
  *
@@ -7,7 +7,7 @@
  * (tens of KB), well within the local quota.
  */
 
-import type { BriefState, BriefFramings } from "@carrybot/core";
+import type { BriefState, BriefFramings } from "@promptfold/core";
 
 export interface CachedBrief {
   state: BriefState;
@@ -19,7 +19,7 @@ export interface CachedBrief {
   savedAt: string;
 }
 
-const PREFIX = "carrybot.brief.";
+const PREFIX = "promptfold.brief.";
 
 export async function loadCachedBrief(
   conversationId: string,

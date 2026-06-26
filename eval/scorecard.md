@@ -1,6 +1,6 @@
-# carrybot eval scorecard
+# PromptFold eval scorecard
 
-Mode: **shape + size only** (no API key). Set `CARRYBOT_API_KEY` to run the same-next-move judgement.
+Mode: **shape + size only** (no API key). Set `PROMPTFOLD_API_KEY` to run the same-next-move judgement.
 
 | Fixture | Full→Brief size | Integrity | Decided/Open/Rejected/Verbatim/Files | Same next move? |
 |---|---|---|---|---|

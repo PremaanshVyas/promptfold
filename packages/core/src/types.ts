@@ -1,5 +1,5 @@
 /**
- * Shared contracts for carrybot's core.
+ * Shared contracts for promptfold's core.
  *
  * Three units communicate only through these types:
  *   capture   →  NormalizedTranscript

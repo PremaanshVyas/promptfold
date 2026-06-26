@@ -1,5 +1,5 @@
 {
-  "name": "@carrybot/eval",
+  "name": "@promptfold/eval",
   "version": "0.1.0",
   "private": true,
   "description": "Proof harness: does the brief preserve everything load-bearing vs the full chat?",
@@ -11,7 +11,7 @@
     "lint": "eslint src --max-warnings=0"
   },
   "dependencies": {
-    "@carrybot/core": "workspace:*"
+    "@promptfold/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

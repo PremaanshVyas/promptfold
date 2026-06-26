@@ -6,7 +6,7 @@
  * markup or script into the page.
  */
 
-import type { BriefState, BriefFramings } from "@carrybot/core";
+import type { BriefState, BriefFramings } from "@promptfold/core";
 import { STYLES } from "./styles.js";
 import {
   exportMarkdown,
@@ -313,7 +313,7 @@ export function openNeedsKeyDrawer(
     el(
       "p",
       undefined,
-      "carrybot distills the chat with your own AI model (BYOK). Add a key in " +
+      "PromptFold distills the chat with your own AI model (BYOK). Add a key in " +
         "settings, it stays on your machine and is sent only to your chosen " +
         "provider. Meanwhile you can still copy a clean, complete transcript of " +
         "this conversation.",
