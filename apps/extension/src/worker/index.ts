@@ -42,6 +42,7 @@ async function runDistill(
       provider: settings.provider,
       apiKey: settings.apiKey,
       model: settings.model,
+      ...(settings.baseUrl ? { baseUrl: settings.baseUrl } : {}),
     });
     const { brief } = await distillWithModel(req.transcript, client, {
       onProgress: (done, total, phase) =>

@@ -12,6 +12,8 @@ export interface Settings {
   provider: Provider;
   apiKey: string;
   model: string;
+  /** OpenAI-compatible base URL for the "custom" provider. */
+  baseUrl: string;
 }
 
 const KEY = "promptfold.settings";
@@ -20,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   provider: "anthropic",
   apiKey: "",
   model: "claude-sonnet-4-6",
+  baseUrl: "",
 };
 
 export async function loadSettings(): Promise<Settings> {
@@ -32,6 +35,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await chrome.storage.local.set({ [KEY]: settings });
 }
 
+/** True when the distiller is configured (a key, or a custom endpoint URL). */
 export function hasKey(settings: Settings): boolean {
+  if (settings.provider === "custom") return settings.baseUrl.trim().length > 0;
   return settings.apiKey.trim().length > 0;
 }

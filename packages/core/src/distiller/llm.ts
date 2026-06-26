@@ -29,17 +29,23 @@ export class LlmError extends Error {
   }
 }
 
-export type Provider = "anthropic" | "openai";
+export type Provider = "anthropic" | "openai" | "custom";
 
 export interface LlmConfig {
   provider: Provider;
   apiKey: string;
   model: string;
+  /**
+   * For the "custom" provider: the OpenAI-compatible base URL, e.g.
+   * https://api.groq.com/openai/v1 or http://localhost:11434/v1 (Ollama).
+   */
+  baseUrl?: string;
 }
 
 export const DEFAULT_MODELS: Record<Provider, string> = {
   anthropic: "claude-sonnet-4-6",
   openai: "gpt-4o",
+  custom: "",
 };
 
 /**
@@ -105,18 +111,21 @@ class AnthropicClient implements LlmClient {
   }
 }
 
-/** OpenAI Chat Completions adapter. */
+/** OpenAI Chat Completions adapter. Also serves any OpenAI-compatible endpoint. */
 class OpenAiClient implements LlmClient {
   readonly id: string;
+  private readonly base: string;
   constructor(
     private readonly cfg: LlmConfig,
     private readonly http: HttpFetch,
+    baseUrl = "https://api.openai.com/v1",
   ) {
-    this.id = `openai:${cfg.model}`;
+    this.base = baseUrl.replace(/\/+$/, "");
+    this.id = `${cfg.provider}:${cfg.model}`;
   }
 
   async complete(req: LlmRequest): Promise<string> {
-    const res = await this.http("https://api.openai.com/v1/chat/completions", {
+    const res = await this.http(`${this.base}/chat/completions`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -171,12 +180,21 @@ export function makeLlmClient(
   cfg: LlmConfig,
   http: HttpFetch = defaultHttp(),
 ): LlmClient {
-  if (!cfg.apiKey) throw new LlmError("Missing API key.");
+  // Custom endpoints (e.g. local Ollama) may need no key; the hosted providers do.
+  if (cfg.provider !== "custom" && !cfg.apiKey) {
+    throw new LlmError("Missing API key.");
+  }
   switch (cfg.provider) {
     case "anthropic":
       return new AnthropicClient(cfg, http);
     case "openai":
       return new OpenAiClient(cfg, http);
+    case "custom": {
+      if (!cfg.baseUrl) {
+        throw new LlmError("Custom provider needs a base URL (OpenAI-compatible).");
+      }
+      return new OpenAiClient(cfg, http, cfg.baseUrl);
+    }
     default:
       throw new LlmError(`Unknown provider: ${cfg.provider as string}`);
   }
