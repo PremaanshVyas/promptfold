@@ -16,11 +16,26 @@ import {
 import type { DistillRequest, WorkerResponse } from "../shared/messages.js";
 import { loadSettings, hasKey } from "../shared/settings.js";
 
+/**
+ * Keep the MV3 service worker alive during a long distill. Chrome reaps an idle
+ * worker after ~30s; a single long LLM call (the merge) has no events to reset
+ * that timer, which killed the worker mid-merge. Pinging any extension API every
+ * 20s resets the idle timer. Returns a stop function.
+ */
+function startKeepAlive(): () => void {
+  const id = setInterval(() => {
+    // The callback form is a no-op API call purely to reset the idle timer.
+    chrome.runtime.getPlatformInfo(() => void chrome.runtime.lastError);
+  }, 20_000);
+  return () => clearInterval(id);
+}
+
 async function runDistill(
   req: DistillRequest,
   post: (msg: WorkerResponse) => void,
 ): Promise<void> {
   const settings = await loadSettings();
+  const stopKeepAlive = startKeepAlive();
   try {
     if (hasKey(settings)) {
       const client = makeLlmClient({
@@ -50,6 +65,8 @@ async function runDistill(
     });
   } catch (err) {
     post({ type: "error", message: (err as Error).message });
+  } finally {
+    stopKeepAlive();
   }
 }
 
