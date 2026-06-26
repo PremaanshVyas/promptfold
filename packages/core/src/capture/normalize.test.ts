@@ -3,6 +3,7 @@ import { normalizeConversation, activeBranch } from "./normalize.js";
 import {
   mixedArtifactsConvo,
   flatTextConvo,
+  sandboxWritingConvo,
 } from "../__fixtures__/conversations.js";
 
 const AT = "2026-06-26T12:00:00Z";
@@ -59,6 +60,22 @@ describe("normalizeConversation — capture completeness", () => {
   it("gives every capture an integrity tally", () => {
     expect(t.integrity.totalBlocks).toBeGreaterThan(0);
     expect(t.integrity.classifiedBlocks).toBeLessThan(t.integrity.totalBlocks);
+  });
+});
+
+describe("normalizeConversation — real sandbox/writing chat", () => {
+  const t = normalizeConversation(sandboxWritingConvo, { capturedAt: AT });
+
+  it("extracts create_file file_text+path as artifacts (the bug that broke v1)", () => {
+    const names = t.artifacts.map((a) => a.filename).sort();
+    expect(names).toEqual(["draft.md", "final-essay.md"]);
+    const final = t.artifacts.find((a) => a.filename === "final-essay.md");
+    expect(final?.content).toContain("Final body");
+  });
+
+  it("treats bash_tool / str_replace / view / present_files as noise, NOT unknown", () => {
+    expect(t.integrity.complete).toBe(true);
+    expect(t.integrity.unknown).toHaveLength(0);
   });
 });
 

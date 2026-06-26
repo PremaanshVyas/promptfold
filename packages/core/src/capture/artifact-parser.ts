@@ -17,18 +17,6 @@
 
 import type { Artifact, ClaudeContentBlock } from "../types.js";
 
-/** Tool names that carry artifacts. */
-const ARTIFACT_TOOL_NAMES = new Set(["artifacts", "create_file"]);
-
-/** Known tool names that are NOT artifacts — safe to treat as noise. */
-const KNOWN_NON_ARTIFACT_TOOLS = new Set([
-  "bash",
-  "repl",
-  "web_search",
-  "web_fetch",
-  "artifacts_v0", // legacy alias seen in some exports; carries no display_content
-]);
-
 export type BlockClassification =
   | { kind: "text"; text: string }
   | { kind: "artifact"; artifact: Omit<Artifact, "id"> }
@@ -87,12 +75,20 @@ export function extractAntArtifactsFromText(
   return { artifacts, remainingText };
 }
 
+/** Last path segment, e.g. "/mnt/user-data/outputs/essay.md" → "essay.md". */
+function basename(p: string): string {
+  const parts = p.split(/[\\/]/);
+  return parts[parts.length - 1] || p;
+}
+
 /**
- * Read the artifact payload out of a tool_use block's `input.display_content`.
- * Two sub-shapes:
- *   - code_block:  { type:"code_block", filename, language, code|content }
- *   - json_block:  a JSON string "{ filename, language, code }"
- * Only treated as a real artifact when a filename is present (filters bash etc.).
+ * Read the artifact payload out of a tool_use block's input. Handles every
+ * file-producing shape seen in the wild — robust to tool renames because it
+ * keys off the PAYLOAD, not the tool name:
+ *   - create_file (current): { path, file_text, language? }
+ *   - artifacts code_block:   display_content { filename, code|content }
+ *   - artifacts json_block:   display_content = JSON string { filename, code }
+ * Returns null when there is no file content (bash, str_replace, view, etc.).
  */
 function readToolUseArtifact(
   block: ClaudeContentBlock,
@@ -100,7 +96,26 @@ function readToolUseArtifact(
 ): Omit<Artifact, "id"> | null {
   const input = block.input;
   if (!input || typeof input !== "object") return null;
-  const display = (input as Record<string, unknown>)["display_content"];
+  const obj = input as Record<string, unknown>;
+
+  // create_file shape: a full file snapshot in `file_text` (+ a `path`).
+  const fileText = obj["file_text"];
+  if (typeof fileText === "string" && fileText.length > 0) {
+    const path = obj["path"];
+    return {
+      format: "tool_use",
+      messageUuid,
+      content: fileText,
+      ...(typeof path === "string" && path.length > 0
+        ? { filename: basename(path) }
+        : {}),
+      ...(typeof obj["language"] === "string"
+        ? { language: obj["language"] as string }
+        : {}),
+    };
+  }
+
+  const display = obj["display_content"];
 
   // json_block: display_content is a JSON string.
   if (typeof display === "string") {
@@ -130,20 +145,20 @@ function readToolUseArtifact(
 
   // code_block: display_content is an object with filename + code/content.
   if (display && typeof display === "object") {
-    const obj = display as Record<string, unknown>;
-    const filename = obj["filename"];
+    const dobj = display as Record<string, unknown>;
+    const filename = dobj["filename"];
     if (typeof filename === "string" && filename.length > 0) {
-      const code = obj["code"] ?? obj["content"] ?? "";
+      const code = dobj["code"] ?? dobj["content"] ?? "";
       return {
         format: "tool_use",
         messageUuid,
         filename,
         content: typeof code === "string" ? code : JSON.stringify(code),
-        ...(typeof obj["language"] === "string"
-          ? { language: obj["language"] as string }
+        ...(typeof dobj["language"] === "string"
+          ? { language: dobj["language"] as string }
           : {}),
-        ...(typeof obj["title"] === "string"
-          ? { title: obj["title"] as string }
+        ...(typeof dobj["title"] === "string"
+          ? { title: dobj["title"] as string }
           : {}),
       };
     }
@@ -169,26 +184,13 @@ export function classifyBlock(
 
   if (type === "tool_use") {
     const name = typeof block.name === "string" ? block.name : "";
-    if (ARTIFACT_TOOL_NAMES.has(name)) {
-      const artifact = readToolUseArtifact(block, messageUuid);
-      if (artifact) return { kind: "artifact", artifact };
-      // An artifact tool with no parseable filename/content is suspicious —
-      // surface it rather than silently drop.
-      return {
-        kind: "unknown",
-        hint: `tool_use:${name} (no parseable display_content)`,
-        preview: truncate(JSON.stringify(block.input ?? {})),
-      };
-    }
-    if (KNOWN_NON_ARTIFACT_TOOLS.has(name)) {
-      return { kind: "tool-noise", hint: `tool_use:${name}` };
-    }
-    // Unknown tool — don't guess. Surface it.
-    return {
-      kind: "unknown",
-      hint: `tool_use:${name || "?"}`,
-      preview: truncate(JSON.stringify(block.input ?? {})),
-    };
+    // Payload-driven, not name-driven: if the block carries file content, it's
+    // an artifact; otherwise it's a tool operation (bash, str_replace, view,
+    // present_files, …) and is noise. This is robust to tool renames — the very
+    // thing that broke the earlier name-allowlist approach on real data.
+    const artifact = readToolUseArtifact(block, messageUuid);
+    if (artifact) return { kind: "artifact", artifact };
+    return { kind: "tool-noise", hint: `tool_use:${name || "?"}` };
   }
 
   if (type === "tool_result") {

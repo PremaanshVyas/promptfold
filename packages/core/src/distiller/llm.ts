@@ -148,10 +148,20 @@ async function safeText(res: HttpResponse): Promise<string> {
   }
 }
 
+/**
+ * Default HTTP transport. `fetch` MUST be bound to the global scope — when it is
+ * stored as a property and later called as `this.http(...)`, an unbound fetch
+ * runs with the wrong receiver and the browser throws
+ * "Illegal invocation" (seen for real in the service worker). `.bind` fixes it.
+ */
+function defaultHttp(): HttpFetch {
+  return globalThis.fetch.bind(globalThis) as unknown as HttpFetch;
+}
+
 /** Build a client for the configured provider. `http` is injectable for tests. */
 export function makeLlmClient(
   cfg: LlmConfig,
-  http: HttpFetch = globalThis.fetch as unknown as HttpFetch,
+  http: HttpFetch = defaultHttp(),
 ): LlmClient {
   if (!cfg.apiKey) throw new LlmError("Missing API key.");
   switch (cfg.provider) {

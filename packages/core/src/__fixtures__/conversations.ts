@@ -90,6 +90,54 @@ export const mixedArtifactsConvo: ClaudeConversation = {
   ],
 };
 
+/**
+ * Mirrors a REAL sandbox/writing chat (the shape that broke the first build):
+ * create_file carries content in `file_text` + `path` (NOT display_content),
+ * and bash_tool / str_replace / view / present_files are tool operations, not
+ * artifacts and not "unknown".
+ */
+export const sandboxWritingConvo: ClaudeConversation = {
+  uuid: "conv-sandbox-1",
+  name: "Write an essay",
+  current_leaf_message_uuid: "s2",
+  chat_messages: [
+    { uuid: "s1", sender: "human", content: [{ type: "text", text: "Write a short essay." }] },
+    {
+      uuid: "s2",
+      parent_message_uuid: "s1",
+      sender: "assistant",
+      content: [
+        { type: "text", text: "Drafting now." },
+        { type: "tool_use", name: "bash_tool", input: { command: "mkdir -p /home/claude/essay" } },
+        {
+          type: "tool_use",
+          name: "create_file",
+          input: {
+            description: "Draft",
+            path: "/home/claude/essay/draft.md",
+            file_text: "# Essay\nFirst draft body.",
+          },
+        },
+        {
+          type: "tool_use",
+          name: "str_replace",
+          input: { path: "/home/claude/essay/draft.md", old_str: "First", new_str: "Revised" },
+        },
+        { type: "tool_use", name: "view", input: { path: "/home/claude/essay/draft.md" } },
+        {
+          type: "tool_use",
+          name: "create_file",
+          input: {
+            path: "/mnt/user-data/outputs/final-essay.md",
+            file_text: "# Essay\nFinal body, much improved.",
+          },
+        },
+        { type: "tool_use", name: "present_files", input: { filepaths: ["/mnt/user-data/outputs/final-essay.md"] } },
+      ],
+    },
+  ],
+};
+
 /** A simple linear conversation, no tree pointers (older shape, flat text). */
 export const flatTextConvo: ClaudeConversation = {
   uuid: "conv-flat-1",
