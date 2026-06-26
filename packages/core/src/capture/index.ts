@@ -33,3 +33,9 @@ export {
   perplexityThreadIdFromUrl,
   type CapturePerplexityOptions,
 } from "./perplexity-api.js";
+export {
+  captureDeepSeekConversation,
+  normalizeDeepSeek,
+  deepseekSessionIdFromUrl,
+  type CaptureDeepSeekOptions,
+} from "./deepseek-api.js";

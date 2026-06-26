@@ -17,6 +17,8 @@ import {
   chatGptConversationIdFromUrl,
   capturePerplexityThread,
   perplexityThreadIdFromUrl,
+  captureDeepSeekConversation,
+  deepseekSessionIdFromUrl,
   transcriptFromMessages,
   type FetchLike,
   type NormalizedTranscript,
@@ -152,13 +154,61 @@ const perplexityAdapter: CaptureAdapter = {
   },
 };
 
+// ── DeepSeek: bearer-from-localStorage REST adapter (like ChatGPT) ──────────
+function readDeepSeekToken(): string {
+  try {
+    const raw = localStorage.getItem("userToken");
+    if (!raw) return "";
+    return (JSON.parse(raw) as { value?: string }).value ?? "";
+  } catch {
+    return "";
+  }
+}
+
+const deepseekAdapter: CaptureAdapter = {
+  id: "deepseek",
+  source: "data layer",
+  matches: (h) => h === "chat.deepseek.com" || h.endsWith(".deepseek.com"),
+  async capture(capturedAt) {
+    const id = deepseekSessionIdFromUrl(location.href);
+    if (!id) throw new Error("Open a DeepSeek chat first, then click Fold.");
+    const token = readDeepSeekToken();
+    if (!token) throw new Error("Could not find your DeepSeek session (are you signed in?).");
+    return captureDeepSeekConversation(id, { fetchImpl, token, capturedAt, baseUrl: location.origin });
+  },
+};
+
 const ADAPTERS: CaptureAdapter[] = [
   claudeAdapter,
   chatgptAdapter,
   perplexityAdapter,
+  deepseekAdapter,
   /* add precise adapters here */
 ];
 
 export function pickAdapter(hostname: string): CaptureAdapter {
   return ADAPTERS.find((a) => a.matches(hostname)) ?? genericDomAdapter;
+}
+
+/**
+ * Capture for the current page. Picks the best adapter; if a data-layer adapter
+ * fails (shape drift, auth, an unsupported page), falls back to the screen
+ * reader so the site still produces a brief instead of erroring.
+ */
+export async function runCapture(
+  capturedAt: string,
+): Promise<{ transcript: NormalizedTranscript; source: CaptureSource }> {
+  const adapter = pickAdapter(location.hostname);
+  try {
+    return { transcript: await adapter.capture(capturedAt), source: adapter.source };
+  } catch (err) {
+    if (adapter.source === "data layer") {
+      try {
+        return { transcript: await genericDomAdapter.capture(capturedAt), source: "screen" };
+      } catch {
+        // The screen reader also found nothing; surface the more specific error.
+      }
+    }
+    throw err;
+  }
 }

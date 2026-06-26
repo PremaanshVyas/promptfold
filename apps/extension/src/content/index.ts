@@ -25,7 +25,7 @@ import {
   type DrawerHandle,
 } from "./drawer.js";
 import { loadCachedBrief, saveCachedBrief } from "../shared/cache.js";
-import { pickAdapter, type CaptureSource } from "./capture.js";
+import { runCapture, type CaptureSource } from "./capture.js";
 
 const HOST_ID = "promptfold-host";
 
@@ -84,15 +84,16 @@ function openSettings() {
 }
 
 async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
-  const adapter = pickAdapter(location.hostname);
-  const source: CaptureSource = adapter.source;
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "Reading conversation…";
 
   let transcript: NormalizedTranscript;
+  let source: CaptureSource;
   try {
-    transcript = await adapter.capture(new Date().toISOString());
+    const r = await runCapture(new Date().toISOString());
+    transcript = r.transcript;
+    source = r.source;
   } catch (err) {
     alert("PromptFold: " + (err as Error).message);
     button.disabled = false;

@@ -9,6 +9,7 @@
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
     "https://*.perplexity.ai/*",
+    "https://chat.deepseek.com/*",
     "https://api.anthropic.com/*",
     "https://api.openai.com/*"
   ],
