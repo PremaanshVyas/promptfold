@@ -108,6 +108,13 @@ export const STYLES = `
 
 .cb-now { font-size: 14px; line-height: 1.55; color: var(--ink); }
 
+.cb-tablewrap { overflow-x: auto; margin: 6px 0; }
+.cb-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+.cb-table th, .cb-table td {
+  border: 1px solid var(--line); padding: 5px 9px; text-align: left; vertical-align: top;
+}
+.cb-table th { background: var(--panel); font-weight: 700; }
+
 .cb-empty { color: var(--faint); font-size: 13px; font-style: italic; }
 
 /* Resume-framing preview */

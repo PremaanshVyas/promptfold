@@ -25,6 +25,10 @@ function section(title: string, body: string): string {
 }
 
 function renderVerbatimItem(v: VerbatimItem): string {
+  if (v.kind === "table") {
+    // The value is already a markdown table; keep it as-is so it renders.
+    return `**${v.label}**\n\n${v.value}`;
+  }
   if (v.kind === "code") {
     const lang = v.language ?? "";
     return `**${v.label}**\n\n\`\`\`${lang}\n${v.value}\n\`\`\``;

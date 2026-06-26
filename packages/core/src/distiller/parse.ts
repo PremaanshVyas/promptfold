@@ -115,6 +115,7 @@ function asArray(v: unknown): unknown[] {
 
 const VERBATIM_KINDS: ReadonlySet<string> = new Set([
   "code",
+  "table",
   "name",
   "path",
   "number",

@@ -50,6 +50,37 @@ function framePreview(label: string, text: string): HTMLElement {
   return box;
 }
 
+/** Render a markdown table string into a real HTML table (safe, textContent). */
+function renderTable(md: string): HTMLElement {
+  const lines = md.trim().split("\n").filter((l) => l.includes("|"));
+  // Need a header + a separator row at minimum; else keep it raw.
+  if (lines.length < 2 || !/^[\s|:-]+$/.test(lines[1] ?? "x")) {
+    return el("pre", "cb-code", md);
+  }
+  const cells = (line: string): string[] => {
+    const parts = line.split("|").map((c) => c.trim());
+    if (parts[0] === "") parts.shift();
+    if (parts[parts.length - 1] === "") parts.pop();
+    return parts;
+  };
+  const wrap = el("div", "cb-tablewrap");
+  const table = el("table", "cb-table");
+  const thead = el("thead");
+  const htr = el("tr");
+  for (const h of cells(lines[0] ?? "")) htr.appendChild(el("th", undefined, h));
+  thead.appendChild(htr);
+  table.appendChild(thead);
+  const tbody = el("tbody");
+  for (const line of lines.slice(2)) {
+    const tr = el("tr");
+    for (const c of cells(line)) tr.appendChild(el("td", undefined, c));
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  return wrap;
+}
+
 /** The brief sections (no framing boxes, those are added separately). */
 function buildSections(state: BriefState): HTMLElement[] {
   const out: HTMLElement[] = [];
@@ -122,6 +153,8 @@ function buildSections(state: BriefState): HTMLElement[] {
       );
       if (v.kind === "code") {
         item.appendChild(el("pre", "cb-code", v.value));
+      } else if (v.kind === "table") {
+        item.appendChild(renderTable(v.value));
       } else {
         item.appendChild(el("div", "cb-vvalue", v.value));
       }

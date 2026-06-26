@@ -13,7 +13,7 @@ export const BRIEF_JSON_SHAPE = `{
   "decided":  [{ "text": string, "replaces"?: string }],
   "open":     [{ "text": string }],
   "rejected": [{ "idea": string, "why": string }],
-  "verbatim": [{ "kind": "code"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
+  "verbatim": [{ "kind": "code"|"table"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
   "filesToAttach": [{ "name": string, "why": string, "source": "chat"|"referenced" }]
 }`;
 
@@ -45,6 +45,13 @@ const SHARED_RULES = `Rules you follow without exception:
 - KEEP EXACT, byte-for-byte: final code, real names, file paths, numbers, API
   contracts, and the precise wording of any constraint. Put these in "verbatim".
   Never paraphrase, reformat, or round a verbatim value.
+- TABLES AND STRUCTURED CONTENT ARE LOAD-BEARING. If the conversation contains a
+  TABLE (a comparison, a spec sheet, a dataset, a pricing/options grid), keep it
+  WHOLE in "verbatim" with kind "table", reproduced as a markdown table exactly,
+  every row and column. NEVER summarize a table into prose or drop rows. The same
+  goes for boxed/callout content, step lists, and any structured data the chat
+  produced: capture it exactly, do not flatten it. Tables are usually the answer,
+  not decoration.
 - CRUSH TO NOTHING: apologies, filler, dead ends, retries, tool mechanics, and
   "try this / no that failed" loops. Maximize recall first, then cut noise.
 - LATEST STATE WINS. If a value changed over the chat (e.g. a timeout 30 then
