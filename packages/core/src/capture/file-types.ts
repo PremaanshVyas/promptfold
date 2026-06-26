@@ -3,7 +3,7 @@
  * inline (TEXT), or must it always be listed as an attachment (BINARY)?
  *
  * Sourced from MDN Common MIME types + IANA. Binary deliverables (pdf, docx,
- * xlsx, images, archives) are never inlined — we don't have their real bytes
+ * xlsx, images, archives) are never inlined, we don't have their real bytes
  * (they're produced by code we can't replay) and they'd be gibberish anyway.
  */
 
@@ -32,7 +32,7 @@ export function extOf(filename: string): string {
 }
 
 /**
- * Lower-cased basename without extension — the key for treating the SAME logical
+ * Lower-cased basename without extension, the key for treating the SAME logical
  * file under different paths/extensions (essay.md, essay.txt, outputs/essay.md)
  * as one. Used to dedupe the files-to-attach list.
  */
@@ -42,7 +42,7 @@ export function stemOf(path: string): string {
   return (dot > 0 ? base.slice(0, dot) : base).toLowerCase();
 }
 
-/** Paths inside Claude's sandbox — internal, not the user's own files. */
+/** Paths inside Claude's sandbox, internal, not the user's own files. */
 export function isSandboxPath(path: string): boolean {
   return /\/(mnt\/user-data|home\/claude|tmp)\//.test("/" + path);
 }

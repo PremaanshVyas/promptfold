@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 // Raw Claude API shapes (only the subset we depend on).
 // Source: claude.ai /api/organizations and /chat_conversations endpoints.
-// Treated as untrusted/partial — every field access is defensive.
+// Treated as untrusted/partial, every field access is defensive.
 // ─────────────────────────────────────────────────────────────────────────
 
 export interface ClaudeOrg {
@@ -78,7 +78,7 @@ export interface Artifact {
   format: ArtifactFormat;
   /** uuid of the message it appeared in. */
   messageUuid: string;
-  /** Binary file (pdf/docx/image/…) — never inline its content; attach it. */
+  /** Binary file (pdf/docx/image/…), never inline its content; attach it. */
   binary?: boolean;
   /** True when Claude formally presented this file to the user (a deliverable). */
   presented?: boolean;
@@ -143,7 +143,7 @@ export interface OpenThread {
 export interface RejectedItem {
   /** The idea that was tried/considered. */
   idea: string;
-  /** Why it was ruled out — the part nobody else carries. */
+  /** Why it was ruled out, the part nobody else carries. */
   why: string;
 }
 
@@ -196,7 +196,7 @@ export interface BriefState {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Brief framings (brief renderer output) — one engine, two framings.
+// Brief framings (brief renderer output), one engine, two framings.
 // ─────────────────────────────────────────────────────────────────────────
 
 export interface BriefFramings {

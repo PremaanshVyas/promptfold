@@ -29,7 +29,7 @@ export interface ProgressResponse {
   phase: string;
 }
 
-/** No API key set — the brief needs one; the content script offers a raw export. */
+/** No API key set, the brief needs one; the content script offers a raw export. */
 export interface NeedsKeyResponse {
   type: "needsKey";
 }

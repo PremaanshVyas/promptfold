@@ -4,7 +4,7 @@
  * chunks. Each chunk becomes a mini-brief; the merge step recombines them.
  *
  * We split on whole messages (never mid-message) so no decision is cut in half.
- * Char budget is a proxy for tokens — deliberately conservative.
+ * Char budget is a proxy for tokens, deliberately conservative.
  */
 
 import type { NormalizedTranscript } from "../types.js";
@@ -46,7 +46,7 @@ export interface ChunkOptions {
 /**
  * Split a transcript into text chunks, each ≤ maxChars where possible, never
  * splitting a single message/artifact across chunks (oversized single units are
- * emitted whole — better a too-big chunk than a severed decision).
+ * emitted whole, better a too-big chunk than a severed decision).
  */
 export function chunkTranscript(
   transcript: NormalizedTranscript,

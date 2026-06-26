@@ -8,7 +8,7 @@
  *   - Pull artifacts out of message bodies (both tool_use and antArtifact).
  *   - Produce an IntegrityReport so completeness is provable, not assumed.
  *
- * Pure: no network, no Date.now — `capturedAt` is passed in by the caller.
+ * Pure: no network, no Date.now, `capturedAt` is passed in by the caller.
  */
 
 import type {
@@ -37,7 +37,7 @@ function toRole(sender: string | undefined): Role {
  * Reconstruct the active conversation path.
  *
  * If `current_leaf_message_uuid` and parent pointers are present, walk from the
- * leaf back to the root and reverse — this yields the branch actually shown,
+ * leaf back to the root and reverse, this yields the branch actually shown,
  * ignoring abandoned edit branches. Otherwise fall back to the raw array order.
  */
 export function activeBranch(convo: ClaudeConversation): ClaudeMessage[] {
@@ -131,7 +131,7 @@ function normalizeMessage(
     textParts.push(msg.text);
   }
 
-  // antArtifact tags can be embedded inside text — extract them too.
+  // antArtifact tags can be embedded inside text, extract them too.
   let text = textParts.join("\n\n");
   if (text.includes("<antArtifact")) {
     const { artifacts: tagArtifacts, remainingText } =

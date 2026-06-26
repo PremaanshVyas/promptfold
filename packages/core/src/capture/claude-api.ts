@@ -2,13 +2,13 @@
  * Claude data-layer client.
  *
  * Runs inside a content script on claude.ai, where same-origin fetch with
- * `credentials: "include"` carries the user's session cookie automatically —
- * no CSRF token, no CORS. This reads the user's OWN conversation, the same
+ * `credentials: "include"` carries the user's session cookie automatically.
+ * No CSRF token, no CORS. This reads the user's OWN conversation, the same
  * request the page makes to render it.
  *
  * IMPORTANT (ToS / risk): this client never routes the Claude session for
- * inference. It reads chat data only. Fetch on demand — one conversation per
- * user action — never bulk-loop.
+ * inference. It reads chat data only. Fetch on demand, one conversation per
+ * user action, never bulk-loop.
  *
  * `fetch` is injected so the logic is unit-testable without a browser.
  */
@@ -105,7 +105,7 @@ export function conversationIdFromUrl(url: string): string | null {
 
 export interface CaptureOptions {
   fetchImpl: FetchLike;
-  /** ISO timestamp from the caller (core stays pure — no Date.now here). */
+  /** ISO timestamp from the caller (core stays pure, no Date.now here). */
   capturedAt: string;
   /** Optional pre-resolved org id to skip the extra round-trip. */
   orgId?: string;

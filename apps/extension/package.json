@@ -2,7 +2,7 @@
   "name": "@carrybot/extension",
   "version": "0.1.0",
   "private": true,
-  "description": "carrybot MV3 Chrome extension — one-click context handoff inside Claude.ai.",
+  "description": "carrybot MV3 Chrome extension, one-click context handoff inside Claude.ai.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

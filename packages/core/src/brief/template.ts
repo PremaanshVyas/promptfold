@@ -1,5 +1,5 @@
 /**
- * Brief renderer — BriefState → two text framings.
+ * Brief renderer. BriefState → two text framings.
  *
  * One engine, two outputs:
  *   - humanMarkdown: for a teammate to read.
@@ -13,7 +13,7 @@ import type { BriefState, BriefFramings, VerbatimItem } from "../types.js";
 
 /** The framing wrapped around the brief when pasting into another chatbot. */
 export const RESUME_HEADER =
-  "Here's where we were on this project. Continue from this exact state — do " +
+  "Here's where we were on this project. Continue from this exact state, do " +
   'not re-suggest anything under "Rejected", and treat everything under ' +
   '"Verbatim" as fixed and exact.';
 
@@ -32,14 +32,14 @@ function renderVerbatimItem(v: VerbatimItem): string {
   return `- **${v.label}** (${v.kind}): \`${v.value}\``;
 }
 
-/** A loud banner when something is not 100% — never silent. */
+/** A loud banner when something is not 100%, never silent. */
 function honestyBanner(state: BriefState): string {
   const lines: string[] = [];
   const integrity = state.meta.integrity;
   if (!integrity.complete) {
     lines.push(
       `> ⚠️ **Capture not 100% clean.** ${integrity.unknown.length} block(s) ` +
-        `could not be parsed and are listed raw below — review them; nothing was dropped silently.`,
+        `could not be parsed and are listed raw below, review them; nothing was dropped silently.`,
     );
   }
   if (state.meta.rawFallbacks.length > 0) {
@@ -58,7 +58,7 @@ function unknownBlocksAppendix(state: BriefState): string {
       (u) => `- \`${u.hint}\` (message ${u.messageUuid.slice(0, 8)}): ${u.preview}`,
     )
     .join("\n");
-  return section("Raw — could not parse (review these)", items);
+  return section("Raw, could not parse (review these)", items);
 }
 
 function renderBody(state: BriefState): string {
@@ -69,20 +69,20 @@ function renderBody(state: BriefState): string {
   const open = state.open.map((o) => `- ${o.text}`).join("\n");
 
   const rejected = state.rejected
-    .map((r) => `- **${r.idea}** — ${r.why}`)
+    .map((r) => `- **${r.idea}**, ${r.why}`)
     .join("\n");
 
   const verbatim = state.verbatim.map(renderVerbatimItem).join("\n\n");
 
   const files = state.filesToAttach
-    .map((f) => `- \`${f.name}\` — ${f.why} _(${f.source})_`)
+    .map((f) => `- \`${f.name}\`, ${f.why} _(${f.source})_`)
     .join("\n");
 
   return [
     section("Decided", decided),
     section("Open", open),
     section("Rejected (and why)", rejected),
-    section("Verbatim — keep exact", verbatim),
+    section("Verbatim, keep exact", verbatim),
     section("Bring these for full context", files),
     unknownBlocksAppendix(state),
   ]
@@ -96,7 +96,7 @@ export function renderBrief(state: BriefState): BriefFramings {
   const body = renderBody(state);
 
   const header =
-    `# Handoff brief — ${state.meta.title}\n\n` +
+    `# Handoff brief, ${state.meta.title}\n\n` +
     `_Produced by ${state.meta.producedBy} · read from Claude's data layer (complete record, not a screen scrape)._\n`;
 
   const humanMarkdown = [header, banner, body]

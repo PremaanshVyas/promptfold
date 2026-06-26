@@ -22,7 +22,7 @@ describe("activeBranch", () => {
   });
 });
 
-describe("normalizeConversation — capture completeness", () => {
+describe("normalizeConversation, capture completeness", () => {
   const t = normalizeConversation(mixedArtifactsConvo, { capturedAt: AT });
 
   it("extracts all three artifact formats", () => {
@@ -63,7 +63,7 @@ describe("normalizeConversation — capture completeness", () => {
   });
 });
 
-describe("normalizeConversation — real sandbox/writing chat", () => {
+describe("normalizeConversation, real sandbox/writing chat", () => {
   const t = normalizeConversation(sandboxWritingConvo, { capturedAt: AT });
 
   it("reconstructs only the PRESENTED deliverable, not intermediate drafts", () => {
@@ -82,7 +82,7 @@ describe("normalizeConversation — real sandbox/writing chat", () => {
   });
 });
 
-describe("normalizeConversation — flat/legacy shape", () => {
+describe("normalizeConversation, flat/legacy shape", () => {
   it("handles flat text messages and a clean integrity report", () => {
     const t = normalizeConversation(flatTextConvo, { capturedAt: AT });
     expect(t.messages).toHaveLength(2);

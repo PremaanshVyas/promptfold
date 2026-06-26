@@ -1,5 +1,5 @@
 /**
- * Sanitized eval fixtures — synthetic conversations, no real user data.
+ * Sanitized eval fixtures, synthetic conversations, no real user data.
  * Each exercises something the brief must get right.
  *
  * Real long-chat fixtures captured from your own account go in eval/fixtures/
@@ -35,13 +35,13 @@ export const FIXTURES: Fixture[] = [
         user("m3", "Okay let's go with Postgres then. Set a connection timeout of 30s.", "m2"),
         asst(
           "m4",
-          "Sounds good — Postgres it is, and I'll rule out DynamoDB because your joins would force expensive client-side stitching. Timeout set to 30s.",
+          "Sounds good. Postgres it is, and I'll rule out DynamoDB because your joins would force expensive client-side stitching. Timeout set to 30s.",
           "m3",
         ),
         user("m5", "Actually 30s is too short under load, bump the timeout to 60s.", "m4"),
         asst(
           "m6",
-          "Updated: connection timeout is now 60s. Also, you'll want to wire this in your real db.ts — I only saw a snippet of it, not the pool config.",
+          "Updated: connection timeout is now 60s. Also, you'll want to wire this in your real db.ts. I only saw a snippet of it, not the pool config.",
           "m5",
         ),
       ],
@@ -59,7 +59,7 @@ export const FIXTURES: Fixture[] = [
         user("a1", "Should we roll our own session auth or use a provider?"),
         asst(
           "a2",
-          "Rolling your own means owning password resets, breach response, and MFA — a lot of risk for a small team. I'd use a managed provider.",
+          "Rolling your own means owning password resets, breach response, and MFA, a lot of risk for a small team. I'd use a managed provider.",
           "a1",
         ),
         user("a3", "Agreed, no custom auth. Use Clerk.", "a2"),

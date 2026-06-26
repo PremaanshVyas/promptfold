@@ -1,9 +1,9 @@
 /**
- * Tier 0 distiller — no key, no model, works everywhere.
+ * Tier 0 distiller, no key, no model, works everywhere.
  *
  * It cannot reason, so Decided/Open/Rejected stay empty (that needs an LLM,
  * Tier 2). What it CAN do is extract the exact, load-bearing facts with high
- * confidence and assemble the files-to-attach checklist — already a more
+ * confidence and assemble the files-to-attach checklist, already a more
  * complete handoff than the popular free exporters ship.
  *
  * Pure and deterministic: same transcript in → same brief out.
@@ -59,16 +59,16 @@ function fromArtifacts(artifacts: Artifact[]): {
         name: a.filename ?? `artifact-${a.id}`,
         source: "chat",
         why: a.presented
-          ? "final deliverable presented in the chat (binary file) — attach it"
-          : "binary file produced in the chat — attach it",
+          ? "final deliverable presented in the chat (binary file), attach it"
+          : "binary file produced in the chat, attach it",
       });
     } else if (a.presented || a.content.length > BIG_CODE_CHARS) {
       files.push({
         name: a.filename ?? `${a.title ?? "artifact-" + a.id}`,
         source: "chat",
         why: a.presented
-          ? `final deliverable presented to the user (${a.content.length} chars) — attach this file`
-          : `final version produced in the chat (${a.content.length} chars) — attach the file rather than re-paste it inline`,
+          ? `final deliverable presented to the user (${a.content.length} chars), attach this file`
+          : `final version produced in the chat (${a.content.length} chars), attach the file rather than re-paste it inline`,
       });
     } else {
       verbatim.push({
@@ -121,9 +121,9 @@ function fromApiMentions(transcript: NormalizedTranscript): VerbatimItem[] {
 /**
  * Filenames mentioned in text but never produced in the chat → "referenced"
  * files to attach (e.g. your real upload_handler.py the chat only saw a snippet
- * of). Excludes sandbox-internal paths (/mnt/user-data, /home/claude, /tmp) —
- * those are handled by file reconstruction, not re-listed as separate files —
- * and anything sharing a STEM with a produced artifact.
+ * of). Excludes sandbox-internal paths (/mnt/user-data, /home/claude, /tmp),
+ * which file reconstruction already handles, and anything sharing a STEM with a
+ * produced artifact.
  */
 function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
   const artifactStems = new Set(
@@ -144,7 +144,7 @@ function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
   return [...mentioned.values()].map((name) => ({
     name,
     source: "referenced" as const,
-    why: "referred to in the chat but never shown in full — attach the real file so the next reader sees more than a snippet",
+    why: "referred to in the chat but never shown in full, attach the real file so the next reader sees more than a snippet",
   }));
 }
 
@@ -193,7 +193,7 @@ export function distillDeterministic(
   const uploadFiles: FileToAttach[] = transcript.uploads.map((u) => ({
     name: u.name,
     source: "referenced",
-    why: "you uploaded this to the chat — attach it so the next reader has the original",
+    why: "you uploaded this to the chat, attach it so the next reader has the original",
   }));
 
   const maxRef = opts.maxReferencedFiles ?? 25;

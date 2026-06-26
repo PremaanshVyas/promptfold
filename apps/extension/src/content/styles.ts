@@ -1,19 +1,20 @@
 /**
- * carrybot UI styles — one coherent type scale, scoped inside a Shadow root so
+ * carrybot UI styles, one coherent type scale, scoped inside a Shadow root so
  * nothing leaks in or out. Design goals from real-use feedback: consistent font
  * sizes (no mixed sizes on one line), readable contrast (not washed-out grey),
  * and a clear, organized layout you read before copying/exporting.
  *
  * Type scale:  label 11 · meta 12.5 · body 14 · title 16 · mono 12.5
- * Ink:         body #20201e · muted #5c5852 (readable) · faint #8c887f (labels)
+ * Palette:     neutral zinc greys + a single teal accent (vendor-neutral, so it
+ *              does not look tied to any one chatbot).
  */
 export const STYLES = `
 :host {
   all: initial;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --ink: #20201e; --muted: #5c5852; --faint: #8c887f;
-  --line: #e8e4dc; --bg: #ffffff; --panel: #faf9f7;
-  --clay: #c4623f; --green: #2f7d32; --blue: #1a66c2;
+  --ink: #1c1c1f; --muted: #56565c; --faint: #8a8a90;
+  --line: #e6e6e9; --bg: #ffffff; --panel: #f6f6f7;
+  --accent: #2f7f7a; --green: #2f7d32; --blue: #1a66c2; --rose: #c2554b;
 }
 * { box-sizing: border-box; }
 
@@ -21,7 +22,7 @@ export const STYLES = `
   position: fixed; right: 20px; bottom: 96px; z-index: 2147483646;
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 16px; border: none; border-radius: 999px; cursor: pointer;
-  background: var(--clay); color: #fff; font-size: 14px; font-weight: 600;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
   box-shadow: 0 4px 14px rgba(0,0,0,.22);
   transition: transform .12s ease, filter .12s ease;
 }
@@ -66,9 +67,9 @@ export const STYLES = `
 }
 .cb-section.decided h3 { color: var(--green); }
 .cb-section.open h3 { color: var(--blue); }
-.cb-section.rejected h3 { color: var(--clay); }
+.cb-section.rejected h3 { color: var(--rose); }
 
-/* Lists — every item is 14px; the "why" is muted but the SAME size. */
+/* Lists, every item is 14px; the "why" is muted but the SAME size. */
 .cb-list { margin: 0; padding: 0; list-style: none; }
 .cb-list li {
   font-size: 14px; line-height: 1.55; color: var(--ink);
@@ -138,24 +139,24 @@ export const STYLES = `
   display: inline-flex; align-items: center; gap: 7px; font-size: 13px;
   color: var(--muted); cursor: pointer; user-select: none;
 }
-.cb-toggle input { width: 15px; height: 15px; accent-color: var(--clay); cursor: pointer; }
+.cb-toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
 .cb-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cb-btn {
   border: 1px solid var(--line); background: var(--bg); color: var(--ink);
   padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
 }
 .cb-btn:hover { background: var(--panel); }
-.cb-btn.primary { background: var(--clay); color: #fff; border-color: var(--clay); }
-.cb-btn.primary:hover { filter: brightness(1.05); background: var(--clay); }
+.cb-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cb-btn.primary:hover { filter: brightness(1.05); background: var(--accent); }
 .cb-btn.ghost { padding: 9px 11px; font-weight: 500; color: var(--muted); }
 .cb-toast { font-size: 12.5px; color: var(--green); opacity: 0; transition: opacity .2s; }
 .cb-toast.show { opacity: 1; }
 
 @media (prefers-color-scheme: dark) {
   :host {
-    --ink: #ededed; --muted: #b3aea4; --faint: #8c887f;
-    --line: #3a3833; --bg: #1f1e1c; --panel: #2a2925;
-    --clay: #d6764f; --green: #6bbf6e; --blue: #6ea8e6;
+    --ink: #ededee; --muted: #a6a6ac; --faint: #7d7d83;
+    --line: #34343a; --bg: #1c1c1f; --panel: #27272b;
+    --accent: #3aa19a; --green: #6bbf6e; --blue: #6ea8e6; --rose: #e08a82;
   }
   .cb-warn { background: #3a2f1c; border-color: #6b552e; color: #f0c889; }
 }

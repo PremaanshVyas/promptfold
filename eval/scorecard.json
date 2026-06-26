@@ -5,9 +5,9 @@
     {
       "id": "db-choice",
       "description": "A database decision with a rejected alternative and a value that changed mid-chat.",
-      "fullChars": 716,
-      "briefChars": 311,
-      "reduction": 0.5656424581005586,
+      "fullChars": 714,
+      "briefChars": 308,
+      "reduction": 0.5686274509803921,
       "integrityComplete": true,
       "sections": {
         "decided": 0,
@@ -20,9 +20,9 @@
     {
       "id": "auth-approach",
       "description": "A non-coding-heavy decision chat with an explicitly rejected approach.",
-      "fullChars": 432,
-      "briefChars": 133,
-      "reduction": 0.6921296296296297,
+      "fullChars": 431,
+      "briefChars": 132,
+      "reduction": 0.6937354988399071,
       "integrityComplete": true,
       "sections": {
         "decided": 0,

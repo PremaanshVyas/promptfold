@@ -2,7 +2,7 @@
  * Renders the brief drawer inside a Shadow root.
  *
  * Security: chat content is untrusted. We build the DOM with createElement +
- * textContent ONLY — never innerHTML — so nothing in a conversation can inject
+ * textContent ONLY, never innerHTML, so nothing in a conversation can inject
  * markup or script into the page.
  */
 
@@ -50,7 +50,7 @@ function framePreview(label: string, text: string): HTMLElement {
   return box;
 }
 
-/** The brief sections (no framing boxes — those are added separately). */
+/** The brief sections (no framing boxes, those are added separately). */
 function buildSections(state: BriefState): HTMLElement[] {
   const out: HTMLElement[] = [];
 
@@ -59,7 +59,7 @@ function buildSections(state: BriefState): HTMLElement[] {
       el(
         "div",
         "cb-warn",
-        `⚠️ Capture not 100% clean — ${state.meta.integrity.unknown.length} block(s) couldn't be parsed and are shown raw below. Nothing was dropped silently.`,
+        `⚠️ Capture not 100% clean, ${state.meta.integrity.unknown.length} block(s) couldn't be parsed and are shown raw below. Nothing was dropped silently.`,
       ),
     );
   }
@@ -96,7 +96,7 @@ function buildSections(state: BriefState): HTMLElement[] {
       state.rejected.map((r) => {
         const li = el("li");
         li.appendChild(el("span", "cb-rej-idea", r.idea));
-        li.appendChild(el("span", "cb-why", ` — ${r.why}`));
+        li.appendChild(el("span", "cb-why", `, ${r.why}`));
         return li;
       }),
       "Nothing ruled out yet.",
@@ -104,7 +104,7 @@ function buildSections(state: BriefState): HTMLElement[] {
   );
 
   const verb = el("div", "cb-section");
-  verb.appendChild(el("h3", undefined, "Verbatim — keep exact"));
+  verb.appendChild(el("h3", undefined, "Verbatim, keep exact"));
   if (state.verbatim.length === 0) {
     verb.appendChild(el("div", "cb-empty", "No exact values extracted."));
   } else {
@@ -130,7 +130,7 @@ function buildSections(state: BriefState): HTMLElement[] {
       state.filesToAttach.map((f) => {
         const li = el("li", "cb-file");
         li.appendChild(el("code", undefined, f.name));
-        li.appendChild(el("span", "cb-why", ` — ${f.why} (${f.source})`));
+        li.appendChild(el("span", "cb-why", `, ${f.why} (${f.source})`));
         return li;
       }),
       "No external files needed.",
@@ -139,7 +139,7 @@ function buildSections(state: BriefState): HTMLElement[] {
 
   if (state.meta.integrity.unknown.length > 0) {
     const raw = el("div", "cb-section");
-    raw.appendChild(el("h3", undefined, "Raw — could not parse (review these)"));
+    raw.appendChild(el("h3", undefined, "Raw, could not parse (review these)"));
     for (const u of state.meta.integrity.unknown) {
       raw.appendChild(el("div", "cb-vlabel", `${u.hint} · message ${u.messageUuid.slice(0, 8)}`));
       raw.appendChild(el("pre", "cb-code", u.preview));
@@ -294,7 +294,7 @@ export function openNeedsKeyDrawer(
       "p",
       undefined,
       "carrybot distills the chat with your own AI model (BYOK). Add a key in " +
-        "settings — it stays on your machine and is sent only to your chosen " +
+        "settings, it stays on your machine and is sent only to your chosen " +
         "provider. Meanwhile you can still copy a clean, complete transcript of " +
         "this conversation.",
     ),

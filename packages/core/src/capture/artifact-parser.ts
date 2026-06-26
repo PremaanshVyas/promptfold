@@ -1,5 +1,5 @@
 /**
- * Artifact parsing — the one part of carrybot that fights Claude's shifting,
+ * Artifact parsing, the one part of carrybot that fights Claude's shifting,
  * undocumented data format. Isolated here so it can be fixed without touching
  * anything else.
  *
@@ -79,7 +79,7 @@ export function extractAntArtifactsFromText(
 /**
  * Read a LEGACY artifact out of a tool_use block's `input.display_content`
  * (the pre-sandbox `artifacts` channel). The current file-sandbox tools
- * (create_file/str_replace/…) are NOT handled here — they are replayed by the
+ * (create_file/str_replace/…) are NOT handled here, they are replayed by the
  * reconstruction engine instead. Returns null when there is no display_content
  * artifact.
  */
@@ -114,7 +114,7 @@ function readDisplayContentArtifact(
         };
       }
     } catch {
-      // Not JSON — fall through; handled as unknown by the caller's filename check.
+      // Not JSON, fall through; handled as unknown by the caller's filename check.
     }
     return null;
   }
@@ -172,7 +172,7 @@ export function classifyBlock(
   }
 
   if (type === "thinking" || type === "redacted_thinking") {
-    // Internal reasoning — not part of the shareable record. Drop as noise.
+    // Internal reasoning, not part of the shareable record. Drop as noise.
     return { kind: "tool-noise", hint: type };
   }
 

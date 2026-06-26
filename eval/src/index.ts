@@ -44,7 +44,7 @@ function toMarkdown(entries: EvalEntry[], judged: boolean, model: string): strin
   lines.push("|---|---|---|---|---|");
   for (const e of entries) {
     const s = e.sections;
-    const move = e.judged ? (e.judged.sameMove ? "✅ yes" : "❌ no") : "—";
+    const move = e.judged ? (e.judged.sameMove ? "✅ yes" : "❌ no") : ", ";
     lines.push(
       `| ${e.id} | ${e.fullChars}→${e.briefChars} (−${pct(e.reduction)}) | ${
         e.integrityComplete ? "✓" : "⚠ partial"

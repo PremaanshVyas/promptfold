@@ -50,16 +50,16 @@ export default function Home() {
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-12">
         <h1 className="text-4xl font-bold tracking-tight">
-          carry<span className="text-clay">bot</span>
+          carry<span className="text-accent">bot</span>
         </h1>
         <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">
-          One click turns a long, messy AI chat into a structured brief —{" "}
-          <strong>Decided · Open · Rejected · Verbatim · Files</strong> — that you
+          One click turns a long, messy AI chat into a structured brief:{" "}
+          <strong>Decided · Open · Rejected · Verbatim · Files</strong>, that you
           can carry to a fresh chat, another chatbot, or a teammate, losing
           nothing that matters.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
-          <Pill tone="bg-clay/10 text-clay">read from the data layer</Pill>
+          <Pill tone="bg-accent/10 text-accent">read from the data layer</Pill>
           <Pill tone="bg-green-500/10 text-green-700 dark:text-green-400">no daily limits</Pill>
           <Pill tone="bg-blue-500/10 text-blue-700 dark:text-blue-400">BYOK · no server</Pill>
           <Pill tone="bg-neutral-500/10 text-neutral-600 dark:text-neutral-300">rejected-with-why</Pill>
@@ -121,7 +121,7 @@ export default function Home() {
                               <Pill tone="bg-red-500/10 text-red-700 dark:text-red-400">❌ no</Pill>
                             )
                           ) : (
-                            <span className="text-neutral-400">—</span>
+                            <span className="text-neutral-400">n/a</span>
                           )}
                         </td>
                       </tr>

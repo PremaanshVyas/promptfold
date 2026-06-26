@@ -10,7 +10,7 @@ import { join } from "node:path";
 const root = process.cwd();
 const gitDir = join(root, ".git");
 if (!existsSync(gitDir)) {
-  // Not a git checkout (CI tarball, dependency install) — skip silently.
+  // Not a git checkout (CI tarball, dependency install), skip silently.
   process.exit(0);
 }
 
@@ -18,7 +18,7 @@ const hooksDir = join(gitDir, "hooks");
 mkdirSync(hooksDir, { recursive: true });
 
 const hook = `#!/bin/sh
-# carrybot pre-commit hook — blocks committing secrets.
+# carrybot pre-commit hook, blocks committing secrets.
 node "./scripts/secret-scan.mjs" || exit 1
 `;
 

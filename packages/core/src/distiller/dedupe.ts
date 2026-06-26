@@ -2,7 +2,7 @@
  * Collapse evolving artifact "lineages" to their latest version.
  *
  * A sandbox/writing chat saves the same file over and over (draft.md, draft2.md,
- * … final.md) — each is a separate artifact, but they're really one document
+ * … final.md), each is a separate artifact, but they're really one document
  * evolving. "Latest state wins" applies to artifacts too: keep the most recent
  * version of each lineage, drop the earlier drafts. This also massively shrinks
  * what we send to the distiller (the real cause of the 5-minute, $0.25 run).

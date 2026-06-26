@@ -27,7 +27,7 @@ import {
 export interface Fixture {
   id: string;
   description: string;
-  /** Raw Claude conversation payload (sanitized — no real user data). */
+  /** Raw Claude conversation payload (sanitized, no real user data). */
   conversation: ClaudeConversation;
   /** The question asked next, to both the brief-only and full-chat models. */
   nextQuestion: string;

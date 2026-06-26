@@ -1,5 +1,5 @@
 /**
- * File reconstruction — replay the sandbox file tools in order to compute each
+ * File reconstruction, replay the sandbox file tools in order to compute each
  * file's TRUE final content and name, then pick the real deliverables.
  *
  * Why: a chat builds draft.md → edits it with str_replace → copies it to
@@ -8,9 +8,9 @@
  * name. Replaying gives ONE file, fully edited, under its real delivered name.
  *
  * Deliverable signal (from Anthropic's sandbox semantics):
- *   1. present_files.filepaths  — Claude's explicit "here are your files" manifest.
- *   2. else: files under /mnt/user-data/outputs/  — the canonical outputs dir.
- *   3. else: nothing was formally delivered — fall back to all written files.
+ *   1. present_files.filepaths . Claude's explicit "here are your files" manifest.
+ *   2. else: files under /mnt/user-data/outputs/ (the canonical outputs dir).
+ *   3. else: nothing was formally delivered, fall back to all written files.
  */
 
 import type { ClaudeContentBlock } from "../types.js";
@@ -129,7 +129,7 @@ function runBash(eng: Engine, command: string): void {
         eng.order = eng.order.filter((x) => x !== p);
       }
     }
-    // mkdir, python, echo, etc.: ignored — content comes from create/edit ops.
+    // mkdir, python, echo, etc.: ignored, content comes from create/edit ops.
   }
 }
 

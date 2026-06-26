@@ -5,8 +5,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        clay: "#c96442",
-        sand: "#faf9f7",
+        accent: "#2f7f7a",
+        sand: "#f6f6f7",
       },
     },
   },

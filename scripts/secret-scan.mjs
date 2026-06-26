@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Secret scanner — blocks committing API keys, private keys, or .env contents.
+ * Secret scanner, blocks committing API keys, private keys, or .env contents.
  *
  * Runs in the pre-commit hook against STAGED content only, and in CI against
  * the whole tree. Exit non-zero on any finding. This is defense-in-depth on top
  * of .gitignore: .gitignore stops files; this stops a secret pasted into a
  * tracked file (README, test, comment).
  *
- * Zero dependencies — runs anywhere Node runs.
+ * Zero dependencies, runs anywhere Node runs.
  */
 
 import { execSync } from "node:child_process";

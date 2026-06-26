@@ -3,7 +3,7 @@
  *
  * Models wrap JSON in ```fences```, add prose, or drop a field. We extract the
  * JSON object, parse it, and coerce each section defensively. Anything missing
- * becomes an empty array — never a crash. If the text has no parseable object
+ * becomes an empty array, never a crash. If the text has no parseable object
  * at all, we throw so the caller can record a loud raw fallback.
  */
 

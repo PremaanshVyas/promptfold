@@ -1,5 +1,5 @@
 /**
- * Export helpers — download the brief as Markdown / plain text, or open a
+ * Export helpers, download the brief as Markdown / plain text, or open a
  * print-ready view (the browser's "Save as PDF" turns it into a PDF). No
  * external libraries: MV3 forbids remote code, so everything is built inline.
  */

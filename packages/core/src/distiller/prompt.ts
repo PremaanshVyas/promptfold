@@ -22,7 +22,7 @@ const SHARED_RULES = `Rules you follow without exception:
   decision, an open thread, a value, or a reason.
 - NO FABRICATED RATIONALE. For every "rejected" item, "why" must be the reason
   actually stated or unmistakably implied. If an idea was dropped but NO reason
-  is given, write "reason not stated" — a wrong invented reason is worse than
+  is given, write "reason not stated", a wrong invented reason is worse than
   admitting the gap. "rejected" is the most important field: it is why a fresh
   chatbot stops re-suggesting dead ideas.
 - KEEP EXACT, byte-for-byte: final code, real names, file paths, numbers, API
@@ -37,9 +37,9 @@ const SHARED_RULES = `Rules you follow without exception:
 - For every decision, capture what it REPLACED in "replaces" when known.
 - "filesToAttach" lists things to bring for full context: big/binary files from
   the chat, and things the chat only REFERRED to but never showed. Each needs
-  one line in "why". Do not list intermediate drafts — only the final file.
+  one line in "why". Do not list intermediate drafts, only the final file.
 - Keep each "verbatim" value SHORT (a value, a path, a constraint, a small
-  snippet). NEVER paste a whole file or a long essay into "verbatim" — list it in
+  snippet). NEVER paste a whole file or a long essay into "verbatim", list it in
   "filesToAttach" instead. Long inline values overflow the response and break it.
 - Before you finish: verify the JSON parses, every verbatim value is copied
   exactly, and no rejected reason was invented.
@@ -73,7 +73,7 @@ Now output ONLY the JSON brief for the chunk above. Ground every item in the
 text, keep verbatim values exact and short, never invent a rejected reason.`;
 }
 
-/** System prompt for MERGING mini-briefs — where latest-state-wins is enforced. */
+/** System prompt for MERGING mini-briefs, where latest-state-wins is enforced. */
 export function mergeSystemPrompt(): string {
   return `You merge several mini-briefs (each from a consecutive chunk of the
 SAME conversation, in order) into ONE final brief.
@@ -85,7 +85,7 @@ Merge rules:
 - LATEST STATE WINS. The mini-briefs are in chronological order. When two
   disagree about the same thing (a number, a decision, a value), keep ONLY the
   later version and drop the stale one entirely. Never list both.
-- SUPERSESSION ACROSS SECTIONS — track each thread's FINAL status:
+- SUPERSESSION ACROSS SECTIONS, track each thread's FINAL status:
   • a "decided" item later contradicted or abandoned → move it to "rejected" with
     the reason it was dropped;
   • an "open" item later answered → move it to "decided" and remove from "open";
@@ -93,7 +93,7 @@ Merge rules:
   Decide membership by the LATEST mini-brief that mentions the thread.
 - DE-DUPLICATE. The same decision, file, or value mentioned in several chunks
   appears once, in its final form.
-- Preserve every distinct "rejected" item with its reason — these accumulate.
+- Preserve every distinct "rejected" item with its reason, these accumulate.
   Keep "reason not stated" as-is; never upgrade it to an invented reason.
 - Keep "verbatim" exact and final. Never re-paraphrase or average two values; if
   two genuinely conflict and neither is clearly later, keep the later-chunk one.
@@ -108,7 +108,7 @@ export function mergeUserPrompt(miniBriefsJson: string[]): string {
   const joined = miniBriefsJson
     .map((b, i) => `--- MINI-BRIEF ${i + 1} ---\n${b}`)
     .join("\n\n");
-  return `Merge these ${miniBriefsJson.length} mini-briefs (chronological — higher number = later = wins on conflict) into one final brief.
+  return `Merge these ${miniBriefsJson.length} mini-briefs (chronological, higher number = later = wins on conflict) into one final brief.
 
 ${joined}
 

@@ -1,5 +1,5 @@
 /**
- * @carrybot/core — the framework-agnostic brain.
+ * @carrybot/core, the framework-agnostic brain.
  * No DOM, no UI, no Date.now. Consumed by both the extension and the web app.
  */
 

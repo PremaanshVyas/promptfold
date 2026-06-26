@@ -1,5 +1,5 @@
 /**
- * Content script — runs on claude.ai.
+ * Content script, runs on claude.ai.
  *
  * 1. Mounts a Shadow-root host + a floating "Carry" button.
  * 2. On click: if this chat already has a saved brief, show it instantly (with a

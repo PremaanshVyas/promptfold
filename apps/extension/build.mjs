@@ -3,11 +3,11 @@
  * esbuild bundler for the MV3 extension.
  *
  * Bundles three entry points to plain files Chrome loads directly:
- *   content.js  — injected into claude.ai (capture + Shadow-DOM drawer)
- *   worker.js   — service worker (BYOK LLM calls; key never enters the page)
- *   options.js  — React settings page
+ *   content.js: injected into claude.ai (capture + Shadow-DOM drawer)
+ *   worker.js:  service worker (BYOK LLM calls; key never enters the page)
+ *   options.js . React settings page
  *
- * MV3 forbids remote code, so EVERYTHING is bundled — no CDN, no eval.
+ * MV3 forbids remote code, so EVERYTHING is bundled, no CDN, no eval.
  *
  * A tiny resolver rewrites `./x.js` → `./x.ts`, because @carrybot/core is
  * authored as TS with ESM-style .js import specifiers.

@@ -1,5 +1,5 @@
 /**
- * Service worker — the only place the BYOK key is read and used.
+ * Service worker, the only place the BYOK key is read and used.
  *
  * Uses a long-lived Port so it can stream progress back to the content script
  * while a long chat is being distilled (otherwise the UI looks frozen). With a
@@ -69,7 +69,7 @@ chrome.runtime.onConnect.addListener((port) => {
         try {
           port.postMessage(msg);
         } catch {
-          // Port closed (user navigated/cancelled) — stop quietly.
+          // Port closed (user navigated/cancelled), stop quietly.
         }
       });
     }

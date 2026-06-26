@@ -1,6 +1,6 @@
 # Security
 
-carrybot reads your AI chat content, so security is a first-class concern — and
+carrybot reads your AI chat content, so security is a first-class concern, and
 this is a public repository, so nothing sensitive must ever land in it.
 
 ## Threat model & guarantees
@@ -8,7 +8,7 @@ this is a public repository, so nothing sensitive must ever land in it.
 - **Your API key never leaves your machine** except in the direct HTTPS call to
   the provider *you* chose (Anthropic or OpenAI). It is stored with
   `chrome.storage.local`, read only by the service worker, never logged, never
-  injected into the page, and never sent to any carrybot server — there is none.
+  injected into the page, and never sent to any carrybot server, there is none.
 - **No middleman.** There is no carrybot backend. Capture happens in your
   browser; distillation is a direct call from the extension to your provider.
 - **Least privilege.** The extension requests only `storage`, `activeTab`,
@@ -27,7 +27,7 @@ Defense in depth:
    raw chat captures, and build output.
 2. **Secret-scan pre-commit hook** (`scripts/secret-scan.mjs`, installed by
    `pnpm install`) blocks committing API keys, private keys, or credential
-   literals — even pasted into a tracked file.
+   literals, even pasted into a tracked file.
 3. **CI runs the same scan** across the whole tree on every push/PR.
 
 Run it manually:
@@ -44,8 +44,8 @@ and must be sanitized before being committed.
 
 ## Platform terms (ToS)
 
-carrybot reads *your own* conversation data with *your own* session — the
-Export-Data category — and distills it with *your own* LLM key. It **never**
+carrybot reads *your own* conversation data with *your own* session, the
+Export-Data category, and distills it with *your own* LLM key. It **never**
 routes your Claude session for inference (the pattern that gets accounts banned).
 Capture is on-demand, one conversation per click, never bulk-looped. The internal
 endpoint is undocumented and may change; this is a personal/portfolio tool, used

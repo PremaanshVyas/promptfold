@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "carrybot — context handoff",
+  "name": "carrybot, context handoff",
   "version": "0.1.0",
   "description": "One click turns a long Claude chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
   "permissions": ["storage", "activeTab", "scripting"],
@@ -22,6 +22,6 @@
   ],
   "options_page": "options.html",
   "action": {
-    "default_title": "carrybot — open settings"
+    "default_title": "carrybot, open settings"
   }
 }

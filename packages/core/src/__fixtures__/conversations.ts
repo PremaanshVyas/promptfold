@@ -1,6 +1,6 @@
 /**
  * Hand-built fixtures mirroring the real claude.ai conversation shapes the
- * research documented. Synthetic — no real user data. Exercises:
+ * research documented. Synthetic, no real user data. Exercises:
  *   - all three artifact formats (create_file json_block, artifacts code_block,
  *     legacy antArtifact tag)
  *   - a branched message tree (an abandoned edit branch that must be ignored)
@@ -39,7 +39,7 @@ export const mixedArtifactsConvo: ClaudeConversation = {
             }),
           },
         },
-        // a non-artifact tool — must be treated as noise, not unknown
+        // a non-artifact tool, must be treated as noise, not unknown
         { type: "tool_use", name: "bash", input: { command: "ls" } },
       ],
       created_at: "2026-06-26T10:01:00Z",
@@ -74,12 +74,12 @@ export const mixedArtifactsConvo: ClaudeConversation = {
           text:
             'Legacy artifact:\n<antArtifact identifier="notes.md" type="text/markdown" title="Notes">\n# Notes\nremember the checksum\n</antArtifact>\nDone.',
         },
-        // an unknown block type — must surface in integrity.unknown
+        // an unknown block type, must surface in integrity.unknown
         { type: "mystery_block", payload: { weird: true } },
       ],
       created_at: "2026-06-26T10:03:00Z",
     },
-    // An ABANDONED branch off m1 (edit) — must be excluded by activeBranch.
+    // An ABANDONED branch off m1 (edit), must be excluded by activeBranch.
     {
       uuid: "m2-alt",
       parent_message_uuid: "m1",

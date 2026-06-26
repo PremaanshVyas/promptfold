@@ -18,7 +18,7 @@ into a structured brief. This policy describes exactly what happens to your data
 - To produce the full brief, the conversation text is sent **only** to the AI
   provider **you** chose (Anthropic or OpenAI), using **your** API key.
 - In the no-key (Tier 0) mode, your conversation **never leaves your browser** at
-  all — the brief is produced entirely on-device.
+  all, the brief is produced entirely on-device.
 
 ## What carrybot does NOT do
 

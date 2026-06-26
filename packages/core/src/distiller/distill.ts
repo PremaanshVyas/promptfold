@@ -113,7 +113,7 @@ export async function distillWithModel(
   // 2) Merge (or take the single mini-brief). Enforce latest-state-wins.
   let finalSections;
   if (miniBriefs.length === 0) {
-    // Model produced nothing usable — degrade to deterministic, loudly.
+    // Model produced nothing usable, degrade to deterministic, loudly.
     rawFallbacks.push(
       "No chunk produced parseable JSON; fell back to deterministic extraction.",
     );

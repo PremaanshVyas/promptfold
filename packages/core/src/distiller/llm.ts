@@ -1,5 +1,5 @@
 /**
- * BYOK LLM client — provider-agnostic interface plus Anthropic and OpenAI
+ * BYOK LLM client, provider-agnostic interface plus Anthropic and OpenAI
  * adapters. The key lives on the user's machine and is sent ONLY to the
  * provider the user chose. carrybot never proxies it.
  *
@@ -157,7 +157,7 @@ async function safeText(res: HttpResponse): Promise<string> {
 }
 
 /**
- * Default HTTP transport. `fetch` MUST be bound to the global scope — when it is
+ * Default HTTP transport. `fetch` MUST be bound to the global scope, when it is
  * stored as a property and later called as `this.http(...)`, an unbound fetch
  * runs with the wrong receiver and the browser throws
  * "Illegal invocation" (seen for real in the service worker). `.bind` fixes it.

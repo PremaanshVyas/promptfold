@@ -1,5 +1,5 @@
 /**
- * Options page (React) — BYOK settings.
+ * Options page (React). BYOK settings.
  *
  * The key is stored with chrome.storage.local on this machine and is sent only
  * to the provider the user picks. There is no carrybot account and no server.
@@ -38,7 +38,7 @@ const input: React.CSSProperties = {
   color: "inherit",
 };
 const button: React.CSSProperties = {
-  background: "#c96442",
+  background: "#2f7f7a",
   color: "#fff",
   border: "none",
   borderRadius: 8,
@@ -86,7 +86,7 @@ function Options() {
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>carrybot settings</h1>
       <p style={{ color: "#7a766d", marginTop: 0 }}>
         Bring your own key. It is stored on this machine and sent only to the
-        provider you choose — there is no carrybot account and no server.
+        provider you choose, there is no carrybot account and no server.
       </p>
 
       <div style={card}>
