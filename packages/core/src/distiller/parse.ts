@@ -18,6 +18,7 @@ import type {
 } from "../types.js";
 
 export interface BriefSections {
+  now: string;
   decided: Decision[];
   open: OpenThread[];
   rejected: RejectedItem[];
@@ -196,5 +197,5 @@ export function parseBriefSections(text: string): BriefSections {
     })
     .filter((f) => f.name.length > 0);
 
-  return { decided, open, rejected, verbatim, filesToAttach };
+  return { now: asString(obj["now"]), decided, open, rejected, verbatim, filesToAttach };
 }

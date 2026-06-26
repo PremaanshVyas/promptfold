@@ -106,6 +106,8 @@ export const STYLES = `
   padding: 1px 6px; border-radius: 5px;
 }
 
+.cb-now { font-size: 14px; line-height: 1.55; color: var(--ink); }
+
 .cb-empty { color: var(--faint); font-size: 13px; font-style: italic; }
 
 /* Resume-framing preview */

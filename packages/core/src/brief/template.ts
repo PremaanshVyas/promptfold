@@ -13,12 +13,12 @@ import type { BriefState, BriefFramings, VerbatimItem } from "../types.js";
 
 /** The framing wrapped around the brief when pasting into another chatbot. */
 export const RESUME_HEADER =
-  "Here's where we were on this project. Continue from this exact state, do " +
-  'not re-suggest anything under "Rejected", and treat everything under ' +
-  '"Verbatim" as fixed and exact.';
+  "This is the current state of an earlier conversation, handed off so you can " +
+  'continue it. Do not re-suggest anything under "Rejected", and treat ' +
+  'everything under "Verbatim" as fixed and exact. Start from "Now".';
 
 export const RESUME_FOOTER =
-  "Pick up from the Open items above. What's the next step?";
+  "That is the full current state. Continue from here.";
 
 function section(title: string, body: string): string {
   return body.trim().length > 0 ? `## ${title}\n\n${body.trim()}\n` : "";
@@ -79,6 +79,7 @@ function renderBody(state: BriefState): string {
     .join("\n");
 
   return [
+    section("Now", state.now.trim()),
     section("Decided", decided),
     section("Open", open),
     section("Rejected (and why)", rejected),

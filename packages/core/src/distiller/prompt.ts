@@ -9,6 +9,7 @@
 
 /** The JSON contract we ask the model to emit, described for the model. */
 export const BRIEF_JSON_SHAPE = `{
+  "now":      string,
   "decided":  [{ "text": string, "replaces"?: string }],
   "open":     [{ "text": string }],
   "rejected": [{ "idea": string, "why": string }],
@@ -17,6 +18,22 @@ export const BRIEF_JSON_SHAPE = `{
 }`;
 
 const SHARED_RULES = `Rules you follow without exception:
+- YOU ARE A SUMMARIZER, NOT AN ADVISOR. Describe only where the conversation
+  stands. NEVER advise, recommend, suggest, prescribe a next step, or add your
+  own opinion. Report what the conversation established, not what should happen.
+  (Exception: if the conversation ITSELF contains advice the assistant gave and
+  the user accepted, that is a decision or a verbatim value, record it as such,
+  attributed to the chat, not as your own.)
+- WORKS FOR ANY CHAT TYPE. This may be coding, writing, research, debugging,
+  tutoring, planning, brainstorming, data analysis, translation, a plain Q&A, a
+  decision, role-play, or anything else. Some sections will be empty for some
+  chats (a pure Q&A has no "rejected"; a tutoring chat has few "decided"). That
+  is fine. Use [] for an empty section; force nothing. The "now" line and
+  "verbatim" facts carry chats that have no decisions.
+- "now" is 1-3 plain, present-tense sentences stating what is being worked on at
+  the LATEST point of the chat (the current focus). Factual, no advice, no
+  "you should". If the chat just answered a question, "now" states what was asked
+  and answered.
 - GROUND EVERYTHING. Before you record an item, find the exact place in the text
   that supports it. If you cannot point to it, do not record it. Never invent a
   decision, an open thread, a value, or a reason.
@@ -89,6 +106,8 @@ Emit JSON of exactly this shape:
 ${BRIEF_JSON_SHAPE}
 
 Merge rules:
+- "now" comes from the LATEST mini-brief only (the current state is whatever the
+  conversation ended on). Do not concatenate older "now" lines.
 - LATEST STATE WINS. The mini-briefs are in chronological order. When two
   disagree about the same thing (a number, a decision, a value), keep ONLY the
   later version and drop the stale one entirely. Never list both.

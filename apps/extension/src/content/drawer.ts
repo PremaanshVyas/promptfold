@@ -54,6 +54,13 @@ function framePreview(label: string, text: string): HTMLElement {
 function buildSections(state: BriefState): HTMLElement[] {
   const out: HTMLElement[] = [];
 
+  if (state.now.trim().length > 0) {
+    const now = el("div", "cb-section");
+    now.appendChild(el("h3", undefined, "Now"));
+    now.appendChild(el("div", "cb-now", state.now.trim()));
+    out.push(now);
+  }
+
   if (!state.meta.integrity.complete) {
     out.push(
       el(

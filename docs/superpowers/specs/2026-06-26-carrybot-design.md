@@ -57,9 +57,18 @@ The genuinely unoccupied space carrybot wins on:
 ## 5. The brief (output)
 
 Every brief has these sections. They are **universal**, they apply equally to a
-coding chat, a resume scorer, a marketing plan, or a legal argument. Only the
-*contents* of Verbatim change with the subject matter.
+coding chat, a resume scorer, a marketing plan, a tutoring session, a plain Q&A,
+or a legal argument. Some sections are empty for some chats (a pure Q&A has no
+Rejected) and that is fine. Only the *contents* change with the subject matter.
 
+carrybot is a **summarizer, not an advisor**. The brief describes only where the
+conversation stands. It never recommends, suggests a next step, or adds an
+opinion. Advice the assistant gave and the user accepted is recorded as a
+decision or a verbatim value, attributed to the chat, not as carrybot's voice.
+
+- **Now**, 1-3 plain present-tense sentences stating what is being worked on at
+  the latest point. The orientation a new chatbot reads first. Carries chats that
+  have no decisions (a Q&A, a translation): it states what was asked and answered.
 - **Decided**, what's locked. Don't relitigate.
 - **Open**, live, unresolved threads. Where the next person picks up.
 - **Rejected**, what was tried and ruled out, **and why**. The piece nobody

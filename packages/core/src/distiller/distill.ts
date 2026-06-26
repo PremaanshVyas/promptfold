@@ -162,6 +162,7 @@ export async function distillWithModel(
 
   return {
     brief: {
+      now: finalSections.now,
       decided: finalSections.decided,
       open: finalSections.open,
       rejected: finalSections.rejected,

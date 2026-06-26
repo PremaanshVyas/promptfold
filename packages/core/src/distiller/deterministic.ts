@@ -204,6 +204,7 @@ export function distillDeterministic(
   ]);
 
   return {
+    now: "",
     decided: [],
     open: [],
     rejected: [],

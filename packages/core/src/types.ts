@@ -177,6 +177,12 @@ export interface FileToAttach {
 }
 
 export interface BriefState {
+  /**
+   * Where the conversation currently stands: 1-3 plain, present-tense sentences
+   * stating what is being worked on at the latest point. Purely descriptive, no
+   * advice and no suggested next step. The orientation a new chatbot reads first.
+   */
+  now: string;
   decided: Decision[];
   open: OpenThread[];
   rejected: RejectedItem[];

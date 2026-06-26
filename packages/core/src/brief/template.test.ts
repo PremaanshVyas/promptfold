@@ -4,6 +4,7 @@ import type { BriefState } from "../types.js";
 
 function baseState(over: Partial<BriefState> = {}): BriefState {
   return {
+    now: "Wiring the auth flow; deciding the hosting region.",
     decided: [{ text: "use TypeScript" }],
     open: [{ text: "pick a hosting region" }],
     rejected: [{ idea: "React in the content script", why: "bundle weight per page load" }],
@@ -24,6 +25,8 @@ describe("renderBrief", () => {
   it("renders both framings with all sections", () => {
     const { humanMarkdown, resumePrompt } = renderBrief(baseState());
     for (const out of [humanMarkdown, resumePrompt]) {
+      expect(out).toContain("Now");
+      expect(out).toContain("hosting region");
       expect(out).toContain("use TypeScript");
       expect(out).toContain("React in the content script");
       expect(out).toContain("bundle weight per page load");
