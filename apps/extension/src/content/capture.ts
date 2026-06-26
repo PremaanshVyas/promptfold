@@ -237,29 +237,29 @@ function pick(html: string, key: string): string | undefined {
  * server-rendered HTML (fetch the page), falling back to the live DOM.
  */
 async function geminiTokens(): Promise<GeminiTokens | null> {
+  // Most reliable: the hidden form field (shared DOM, no network).
+  let at = document.querySelector<HTMLInputElement>('input[name="at"]')?.value || "";
   let html = "";
-  try {
-    html = await (await fetch(location.href, { credentials: "include" })).text();
-  } catch (e) {
-    console.warn(PF, "fetch(location.href) failed", e);
-  }
-  if (!/"SNlM0e"/.test(html)) {
-    console.warn(PF, "SNlM0e not in fetched HTML, trying live DOM");
-    html = document.documentElement.innerHTML;
-  }
-  const at = pick(html, "SNlM0e");
   if (!at) {
-    console.warn(PF, "SNlM0e token NOT found anywhere");
+    try {
+      html = await (await fetch(location.href, { credentials: "include" })).text();
+    } catch (e) {
+      console.warn(PF, "fetch(location.href) failed", e);
+    }
+    if (!/"SNlM0e"/.test(html)) {
+      console.warn(PF, "SNlM0e not in fetched HTML, trying live DOM");
+      html = document.documentElement.innerHTML;
+    }
+    at = pick(html, "SNlM0e") ?? "";
+  }
+  if (!at) {
+    console.warn(PF, "SNlM0e token NOT found (input[name=at] or HTML)");
     return null;
   }
   const tokens: GeminiTokens = { at };
-  const bl = pick(html, "cfb2h");
-  const fsid = pick(html, "FdrFJe");
-  const hl = pick(html, "TuX5cc");
-  if (bl) tokens.bl = bl;
-  if (fsid) tokens.fsid = fsid;
+  const hl = pick(html || document.documentElement.innerHTML, "TuX5cc");
   if (hl) tokens.hl = hl;
-  console.log(PF, "tokens found — at:", at.length, "chars, bl:", bl, "fsid:", !!fsid, "hl:", hl);
+  console.log(PF, "token found — at:", at.length, "chars, hl:", hl, "(via", at && document.querySelector('input[name="at"]') ? "input" : "html", ")");
   return tokens;
 }
 

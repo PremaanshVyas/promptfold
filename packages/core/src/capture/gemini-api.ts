@@ -86,7 +86,20 @@ function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-/** Parse the read-chat payload into messages. Positional access (no field names). */
+/** Model text is at candidate[1][0], unless it's a card_content URL → [22][0]. */
+function candidateText(candidate: unknown[]): string {
+  const primary = str((candidate?.[1] as unknown[])?.[0]);
+  if (primary && !primary.startsWith("http://googleusercontent.com/card_content")) {
+    return primary;
+  }
+  const card = str((candidate?.[22] as unknown[])?.[0]);
+  return card || primary;
+}
+
+/**
+ * Parse the read-chat payload into messages. Positional access (no field names).
+ * Turns come newest-first from the server, so we reverse to chronological order.
+ */
 export function normalizeGeminiPayload(
   payload: unknown,
   opts: { capturedAt: string },
@@ -94,14 +107,14 @@ export function normalizeGeminiPayload(
   const messages: NormalizedMessage[] = [];
   const turns = (payload as unknown[])?.[0];
   if (Array.isArray(turns)) {
-    for (const turn of turns) {
+    for (const turn of [...turns].reverse()) {
       const t = turn as unknown[];
       // user message text -> conv_turn[2][0][0]
       const userText = str((((t?.[2] as unknown[])?.[0]) as unknown[])?.[0]);
       if (userText) messages.push({ uuid: `gm-${messages.length}`, role: "human", text: userText });
-      // model candidate -> conv_turn[3][0]; text -> candidate[1][0]
+      // model candidate -> conv_turn[3][0]; text -> candidate[1][0] (or [22][0])
       const candidate = ((t?.[3] as unknown[])?.[0]) as unknown[];
-      const modelText = str(((candidate?.[1] as unknown[])?.[0]) ?? "");
+      const modelText = candidateText(candidate);
       if (modelText) messages.push({ uuid: `gm-${messages.length}`, role: "assistant", text: modelText });
     }
   }
@@ -130,29 +143,30 @@ export interface CaptureGeminiOptions {
 }
 
 export async function captureGeminiConversation(
-  cid: string,
+  conversationId: string,
   opts: CaptureGeminiOptions,
 ): Promise<NormalizedTranscript> {
-  const inner = JSON.stringify([cid, 10, null, 1, [1], [4], null, 1]);
+  // The read RPC needs the c_-prefixed id; the URL gives the bare segment.
+  const cid = conversationId.startsWith("c_") ? conversationId : `c_${conversationId}`;
+  const inner = JSON.stringify([cid, 1000, null, 1, [1], [4], null, 1]);
   const fReq = JSON.stringify([[[READ_CHAT, inner, null, "generic"]]]);
   const params = new URLSearchParams({
     rpcids: READ_CHAT,
     "source-path": "/app",
-    ...(opts.tokens.bl ? { bl: opts.tokens.bl } : {}),
-    ...(opts.tokens.fsid ? { "f.sid": opts.tokens.fsid } : {}),
     ...(opts.tokens.hl ? { hl: opts.tokens.hl } : {}),
     _reqid: String(opts.reqid ?? 100000),
     rt: "c",
   });
   const body = new URLSearchParams({ "f.req": fReq, at: opts.tokens.at }).toString();
 
+  // Minimal header set, matching the in-browser exporter that works. The jspb
+  // and bl headers are only needed for sends, not reads.
   const res = await opts.post(`${BATCH}?${params.toString()}`, {
     method: "POST",
     credentials: "include",
     headers: {
-      "content-type": "application/x-www-form-urlencoded;charset=utf-8",
+      "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
       "x-same-domain": "1",
-      "x-goog-ext-73010989-jspb": "[0]",
     },
     body,
   });
