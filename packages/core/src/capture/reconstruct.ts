@@ -14,7 +14,7 @@
  */
 
 import type { ClaudeContentBlock } from "../types.js";
-import { isBinaryFile } from "./file-types.js";
+import { isBinaryFile } from "./shared/file-types.js";
 
 const OUTPUTS_DIR = "/mnt/user-data/outputs/";
 

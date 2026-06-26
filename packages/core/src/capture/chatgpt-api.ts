@@ -17,7 +17,7 @@
  */
 
 import type { Artifact, NormalizedMessage, NormalizedTranscript, Role } from "../types.js";
-import { CaptureError, type FetchLike } from "./claude-api.js";
+import { CaptureError, type FetchLike } from "./shared/http.js";
 
 // ── on-wire shapes (only the subset we use) ────────────────────────────────
 interface GptContent {

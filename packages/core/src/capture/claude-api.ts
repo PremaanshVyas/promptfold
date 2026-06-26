@@ -19,24 +19,10 @@ import type {
   NormalizedTranscript,
 } from "../types.js";
 import { normalizeConversation } from "./normalize.js";
+import { CaptureError, type FetchLike } from "./shared/http.js";
 
-export type FetchLike = (
-  input: string,
-  init?: {
-    credentials?: "include" | "omit" | "same-origin";
-    headers?: Record<string, string>;
-  },
-) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
-
-export class CaptureError extends Error {
-  constructor(
-    message: string,
-    override readonly cause?: unknown,
-  ) {
-    super(message);
-    this.name = "CaptureError";
-  }
-}
+// Re-export so existing importers keep working during/after the reorg.
+export { CaptureError, type FetchLike };
 
 const BASE = "https://claude.ai/api";
 

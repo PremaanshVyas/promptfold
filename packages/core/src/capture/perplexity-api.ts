@@ -14,7 +14,7 @@
  */
 
 import type { NormalizedMessage, NormalizedTranscript, Role } from "../types.js";
-import { CaptureError, type FetchLike } from "./claude-api.js";
+import { CaptureError, type FetchLike } from "./shared/http.js";
 
 const DEFAULT_BASE = "https://www.perplexity.ai";
 

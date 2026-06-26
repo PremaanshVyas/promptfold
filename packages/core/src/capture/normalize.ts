@@ -160,41 +160,12 @@ export interface NormalizeOptions {
   capturedAt: string;
 }
 
-export interface SimpleMessage {
-  role: Role;
-  text: string;
-}
-
-/**
- * Build a NormalizedTranscript from a plain list of {role, text} messages.
- *
- * This is the bridge for the GENERIC DOM adapter: on a platform we have no
- * data-layer adapter for, the extension reads the visible conversation off the
- * page and hands the messages here. No artifacts (the DOM cannot recover hidden
- * side-panel content), so integrity is trivially complete for what was seen.
- */
-export function transcriptFromMessages(
-  msgs: SimpleMessage[],
-  meta: { conversationId: string; title: string; capturedAt: string },
-): NormalizedTranscript {
-  const messages: NormalizedMessage[] = msgs
-    .filter((m) => m.text.trim().length > 0)
-    .map((m, i) => ({ uuid: `dom-${i}`, role: m.role, text: m.text.trim() }));
-  return {
-    conversationId: meta.conversationId,
-    title: meta.title.trim() || "Untitled conversation",
-    capturedAt: meta.capturedAt,
-    messages,
-    artifacts: [],
-    uploads: [],
-    integrity: {
-      totalBlocks: messages.length,
-      classifiedBlocks: messages.length,
-      unknown: [],
-      complete: true,
-    },
-  };
-}
+// transcriptFromMessages moved to shared/transcript.ts (it's platform-agnostic);
+// re-exported here so existing importers keep working.
+export {
+  transcriptFromMessages,
+  type SimpleMessage,
+} from "./shared/transcript.js";
 
 export function normalizeConversation(
   convo: ClaudeConversation,

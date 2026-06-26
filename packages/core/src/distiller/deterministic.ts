@@ -17,7 +17,7 @@ import type {
   VerbatimItem,
 } from "../types.js";
 import { collapseArtifactLineage } from "./dedupe.js";
-import { isSandboxPath, stemOf } from "../capture/file-types.js";
+import { isSandboxPath, stemOf } from "../capture/shared/file-types.js";
 
 /** Above this, code is better attached as a file than pasted inline. */
 const BIG_CODE_CHARS = 1500;

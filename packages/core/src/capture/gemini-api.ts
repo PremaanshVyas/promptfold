@@ -14,7 +14,7 @@
  */
 
 import type { Artifact, NormalizedMessage, NormalizedTranscript } from "../types.js";
-import { CaptureError } from "./claude-api.js";
+import { CaptureError } from "./shared/http.js";
 
 const BATCH = "https://gemini.google.com/_/BardChatUi/data/batchexecute";
 const READ_CHAT = "hNvQHb";
