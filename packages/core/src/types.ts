@@ -63,12 +63,16 @@ export interface Artifact {
   filename?: string;
   /** Language / mime hint ("python", "text/markdown", ...). */
   language?: string;
-  /** Raw source content of the artifact. */
+  /** Raw source content of the artifact (empty for binary deliverables). */
   content: string;
   /** Which on-wire format this came from. */
   format: ArtifactFormat;
   /** uuid of the message it appeared in. */
   messageUuid: string;
+  /** Binary file (pdf/docx/image/…) — never inline its content; attach it. */
+  binary?: boolean;
+  /** True when Claude formally presented this file to the user (a deliverable). */
+  presented?: boolean;
 }
 
 export interface NormalizedMessage {

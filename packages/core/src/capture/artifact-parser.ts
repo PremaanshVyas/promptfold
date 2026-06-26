@@ -20,6 +20,7 @@ import type { Artifact, ClaudeContentBlock } from "../types.js";
 export type BlockClassification =
   | { kind: "text"; text: string }
   | { kind: "artifact"; artifact: Omit<Artifact, "id"> }
+  | { kind: "tool"; block: ClaudeContentBlock } // file ops, replayed by the engine
   | { kind: "tool-noise"; hint: string }
   | { kind: "unknown"; hint: string; preview: string };
 
@@ -75,45 +76,20 @@ export function extractAntArtifactsFromText(
   return { artifacts, remainingText };
 }
 
-/** Last path segment, e.g. "/mnt/user-data/outputs/essay.md" → "essay.md". */
-function basename(p: string): string {
-  const parts = p.split(/[\\/]/);
-  return parts[parts.length - 1] || p;
-}
-
 /**
- * Read the artifact payload out of a tool_use block's input. Handles every
- * file-producing shape seen in the wild — robust to tool renames because it
- * keys off the PAYLOAD, not the tool name:
- *   - create_file (current): { path, file_text, language? }
- *   - artifacts code_block:   display_content { filename, code|content }
- *   - artifacts json_block:   display_content = JSON string { filename, code }
- * Returns null when there is no file content (bash, str_replace, view, etc.).
+ * Read a LEGACY artifact out of a tool_use block's `input.display_content`
+ * (the pre-sandbox `artifacts` channel). The current file-sandbox tools
+ * (create_file/str_replace/…) are NOT handled here — they are replayed by the
+ * reconstruction engine instead. Returns null when there is no display_content
+ * artifact.
  */
-function readToolUseArtifact(
+function readDisplayContentArtifact(
   block: ClaudeContentBlock,
   messageUuid: string,
 ): Omit<Artifact, "id"> | null {
   const input = block.input;
   if (!input || typeof input !== "object") return null;
   const obj = input as Record<string, unknown>;
-
-  // create_file shape: a full file snapshot in `file_text` (+ a `path`).
-  const fileText = obj["file_text"];
-  if (typeof fileText === "string" && fileText.length > 0) {
-    const path = obj["path"];
-    return {
-      format: "tool_use",
-      messageUuid,
-      content: fileText,
-      ...(typeof path === "string" && path.length > 0
-        ? { filename: basename(path) }
-        : {}),
-      ...(typeof obj["language"] === "string"
-        ? { language: obj["language"] as string }
-        : {}),
-    };
-  }
 
   const display = obj["display_content"];
 
@@ -183,14 +159,12 @@ export function classifyBlock(
   }
 
   if (type === "tool_use") {
-    const name = typeof block.name === "string" ? block.name : "";
-    // Payload-driven, not name-driven: if the block carries file content, it's
-    // an artifact; otherwise it's a tool operation (bash, str_replace, view,
-    // present_files, …) and is noise. This is robust to tool renames — the very
-    // thing that broke the earlier name-allowlist approach on real data.
-    const artifact = readToolUseArtifact(block, messageUuid);
-    if (artifact) return { kind: "artifact", artifact };
-    return { kind: "tool-noise", hint: `tool_use:${name || "?"}` };
+    // Legacy display_content artifacts are captured inline here. Everything else
+    // tool-shaped (create_file/str_replace/insert/bash/present_files/…) is handed
+    // to the reconstruction engine, which replays it into final files.
+    const legacy = readDisplayContentArtifact(block, messageUuid);
+    if (legacy) return { kind: "artifact", artifact: legacy };
+    return { kind: "tool", block };
   }
 
   if (type === "tool_result") {

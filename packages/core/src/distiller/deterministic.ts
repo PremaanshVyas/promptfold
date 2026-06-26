@@ -53,11 +53,21 @@ function fromArtifacts(artifacts: Artifact[]): {
   const verbatim: VerbatimItem[] = [];
   const files: FileToAttach[] = [];
   for (const a of artifacts) {
-    if (a.content.length > BIG_CODE_CHARS) {
+    if (a.binary) {
+      files.push({
+        name: a.filename ?? `artifact-${a.id}`,
+        source: "chat",
+        why: a.presented
+          ? "final deliverable presented in the chat (binary file) — attach it"
+          : "binary file produced in the chat — attach it",
+      });
+    } else if (a.presented || a.content.length > BIG_CODE_CHARS) {
       files.push({
         name: a.filename ?? `${a.title ?? "artifact-" + a.id}`,
         source: "chat",
-        why: `final version produced in the chat (${a.content.length} chars) — attach the file rather than re-paste it inline`,
+        why: a.presented
+          ? `final deliverable presented to the user (${a.content.length} chars) — attach this file`
+          : `final version produced in the chat (${a.content.length} chars) — attach the file rather than re-paste it inline`,
       });
     } else {
       verbatim.push({

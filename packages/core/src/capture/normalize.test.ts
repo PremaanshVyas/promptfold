@@ -66,14 +66,17 @@ describe("normalizeConversation — capture completeness", () => {
 describe("normalizeConversation — real sandbox/writing chat", () => {
   const t = normalizeConversation(sandboxWritingConvo, { capturedAt: AT });
 
-  it("extracts create_file file_text+path as artifacts (the bug that broke v1)", () => {
-    const names = t.artifacts.map((a) => a.filename).sort();
-    expect(names).toEqual(["draft.md", "final-essay.md"]);
+  it("reconstructs only the PRESENTED deliverable, not intermediate drafts", () => {
+    // draft.md lives in /home/claude (scratch) and was never presented; only the
+    // /mnt/user-data/outputs file in present_files is a deliverable.
+    const names = t.artifacts.map((a) => a.filename);
+    expect(names).toEqual(["final-essay.md"]);
     const final = t.artifacts.find((a) => a.filename === "final-essay.md");
     expect(final?.content).toContain("Final body");
+    expect(final?.presented).toBe(true);
   });
 
-  it("treats bash_tool / str_replace / view / present_files as noise, NOT unknown", () => {
+  it("treats the sandbox tool ops as classified, not unknown", () => {
     expect(t.integrity.complete).toBe(true);
     expect(t.integrity.unknown).toHaveLength(0);
   });

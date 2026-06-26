@@ -13,6 +13,7 @@
 
 import type {
   Artifact,
+  ClaudeContentBlock,
   ClaudeConversation,
   ClaudeMessage,
   IntegrityReport,
@@ -25,6 +26,7 @@ import {
   classifyBlock,
   extractAntArtifactsFromText,
 } from "./artifact-parser.js";
+import { reconstructFiles } from "./reconstruct.js";
 
 function toRole(sender: string | undefined): Role {
   return sender === "assistant" ? "assistant" : "human";
@@ -73,12 +75,14 @@ function normalizeMessage(
 ): {
   message: NormalizedMessage;
   artifacts: Artifact[];
+  toolBlocks: ClaudeContentBlock[];
   totalBlocks: number;
   classifiedBlocks: number;
   unknown: UnknownBlock[];
 } {
   const role = toRole(msg.sender);
   const artifacts: Artifact[] = [];
+  const toolBlocks: ClaudeContentBlock[] = [];
   const unknown: UnknownBlock[] = [];
   const textParts: string[] = [];
   let totalBlocks = 0;
@@ -98,6 +102,11 @@ function normalizeMessage(
         case "artifact": {
           classifiedBlocks += 1;
           artifacts.push({ id: nextArtifactId(), ...c.artifact });
+          break;
+        }
+        case "tool": {
+          classifiedBlocks += 1;
+          toolBlocks.push(c.block);
           break;
         }
         case "tool-noise": {
@@ -138,6 +147,7 @@ function normalizeMessage(
       ...(msg.created_at ? { createdAt: msg.created_at } : {}),
     },
     artifacts,
+    toolBlocks,
     totalBlocks,
     classifiedBlocks,
     unknown,
@@ -163,6 +173,7 @@ export function normalizeConversation(
 
   const messages: NormalizedMessage[] = [];
   const artifacts: Artifact[] = [];
+  const toolBlocks: ClaudeContentBlock[] = [];
   const unknown: UnknownBlock[] = [];
   let totalBlocks = 0;
   let classifiedBlocks = 0;
@@ -174,9 +185,25 @@ export function normalizeConversation(
       messages.push(n.message);
     }
     artifacts.push(...n.artifacts);
+    toolBlocks.push(...n.toolBlocks);
     unknown.push(...n.unknown);
     totalBlocks += n.totalBlocks;
     classifiedBlocks += n.classifiedBlocks;
+  }
+
+  // Replay the sandbox file operations into final deliverables (correct name +
+  // fully-edited content), and add them as artifacts.
+  const { deliverables } = reconstructFiles(toolBlocks);
+  for (const f of deliverables) {
+    artifacts.push({
+      id: nextArtifactId(),
+      filename: f.name,
+      content: f.content,
+      format: "tool_use",
+      messageUuid: "reconstructed",
+      ...(f.binary ? { binary: true } : {}),
+      ...(f.presented ? { presented: true } : {}),
+    });
   }
 
   const integrity: IntegrityReport = {

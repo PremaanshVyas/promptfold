@@ -17,22 +17,32 @@ export const BRIEF_JSON_SHAPE = `{
 }`;
 
 const SHARED_RULES = `Rules you follow without exception:
+- GROUND EVERYTHING. Before you record an item, find the exact place in the text
+  that supports it. If you cannot point to it, do not record it. Never invent a
+  decision, an open thread, a value, or a reason.
+- NO FABRICATED RATIONALE. For every "rejected" item, "why" must be the reason
+  actually stated or unmistakably implied. If an idea was dropped but NO reason
+  is given, write "reason not stated" — a wrong invented reason is worse than
+  admitting the gap. "rejected" is the most important field: it is why a fresh
+  chatbot stops re-suggesting dead ideas.
 - KEEP EXACT, byte-for-byte: final code, real names, file paths, numbers, API
   contracts, and the precise wording of any constraint. Put these in "verbatim".
-- CRUSH TO NOTHING: apologies, dead ends, re-explanations, and "try this / no
-  that failed" loops. They are noise.
-- For every decision, also capture what it REPLACED or RULED OUT, so "rejected"
-  stays accurate with a real reason in "why". This is the most important field —
-  it is why a fresh chatbot stops re-suggesting dead ideas.
+  Never paraphrase, reformat, or round a verbatim value.
+- CRUSH TO NOTHING: apologies, filler, dead ends, retries, tool mechanics, and
+  "try this / no that failed" loops. Maximize recall first, then cut noise.
 - LATEST STATE WINS. If a value changed over the chat (e.g. a timeout 30 then
-  60), record only the final value (60). Never both, never the stale one.
-- Do NOT invent. If something is unknown, leave it out rather than guess.
-- "filesToAttach" lists things to bring for full context: big things from the
-  chat better as a file, and things the chat only REFERRED to but never showed.
-  Each needs one line in "why".
+  60), record only the final value (60). Never both, never the stale one. The
+  chunk you are given is labelled with its position; later chunks supersede
+  earlier ones.
+- For every decision, capture what it REPLACED in "replaces" when known.
+- "filesToAttach" lists things to bring for full context: big/binary files from
+  the chat, and things the chat only REFERRED to but never showed. Each needs
+  one line in "why". Do not list intermediate drafts — only the final file.
 - Keep each "verbatim" value SHORT (a value, a path, a constraint, a small
   snippet). NEVER paste a whole file or a long essay into "verbatim" — list it in
   "filesToAttach" instead. Long inline values overflow the response and break it.
+- Before you finish: verify the JSON parses, every verbatim value is copied
+  exactly, and no rejected reason was invented.
 - Output ONLY valid, COMPLETE JSON matching the shape. No prose, no markdown
   fences. If you have many items, be terse so the JSON finishes within limits.`;
 
@@ -69,15 +79,24 @@ Emit JSON of exactly this shape:
 ${BRIEF_JSON_SHAPE}
 
 Merge rules:
-- The mini-briefs are in chronological order. When two of them disagree about a
-  value (a number, a decision, a piece of code), the LATER one wins. This is
-  where "latest state wins" is enforced — drop the stale value entirely.
-- A decision in a later chunk can move an earlier "open" item to "decided", or an
-  earlier "decided"/"open" item to "rejected". Reflect the final state only.
-- De-duplicate. The same decision or file mentioned in several chunks appears
-  once, in its final form.
+- LATEST STATE WINS. The mini-briefs are in chronological order. When two
+  disagree about the same thing (a number, a decision, a value), keep ONLY the
+  later version and drop the stale one entirely. Never list both.
+- SUPERSESSION ACROSS SECTIONS — track each thread's FINAL status:
+  • a "decided" item later contradicted or abandoned → move it to "rejected" with
+    the reason it was dropped;
+  • an "open" item later answered → move it to "decided" and remove from "open";
+  • a "rejected" idea later revived and adopted → move it to "decided".
+  Decide membership by the LATEST mini-brief that mentions the thread.
+- DE-DUPLICATE. The same decision, file, or value mentioned in several chunks
+  appears once, in its final form.
 - Preserve every distinct "rejected" item with its reason — these accumulate.
-- Keep "verbatim" exact. For code, keep only the final version of each file.
+  Keep "reason not stated" as-is; never upgrade it to an invented reason.
+- Keep "verbatim" exact and final. Never re-paraphrase or average two values; if
+  two genuinely conflict and neither is clearly later, keep the later-chunk one.
+- ADD NOTHING new during merge. You may only delete, move, dedupe, and pick the
+  latest. Before finishing, verify no thread appears in two sections and no value
+  appears in both a stale and a final form.
 
 ${SHARED_RULES}`;
 }
