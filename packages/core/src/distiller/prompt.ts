@@ -63,11 +63,14 @@ export function chunkUserPrompt(
   index: number,
   total: number,
 ): string {
-  return `Conversation chunk ${index + 1} of ${total}. Distill it into the JSON brief.
+  return `Conversation chunk ${index + 1} of ${total} (a HIGHER number means later in the chat, so it supersedes earlier chunks). Distill it into the JSON brief.
 
 --- CHUNK START ---
 ${chunkText}
---- CHUNK END ---`;
+--- CHUNK END ---
+
+Now output ONLY the JSON brief for the chunk above. Ground every item in the
+text, keep verbatim values exact and short, never invent a rejected reason.`;
 }
 
 /** System prompt for MERGING mini-briefs — where latest-state-wins is enforced. */
@@ -105,7 +108,10 @@ export function mergeUserPrompt(miniBriefsJson: string[]): string {
   const joined = miniBriefsJson
     .map((b, i) => `--- MINI-BRIEF ${i + 1} ---\n${b}`)
     .join("\n\n");
-  return `Merge these ${miniBriefsJson.length} mini-briefs (chronological) into one final brief.
+  return `Merge these ${miniBriefsJson.length} mini-briefs (chronological — higher number = later = wins on conflict) into one final brief.
 
-${joined}`;
+${joined}
+
+Now output ONLY the merged JSON brief. Apply latest-state-wins and supersession,
+dedupe, add nothing new, and keep every distinct rejected item with its reason.`;
 }

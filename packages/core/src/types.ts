@@ -30,6 +30,13 @@ export interface ClaudeContentBlock {
   [key: string]: unknown;
 }
 
+export interface ClaudeAttachment {
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
+  extracted_content?: string;
+}
+
 export interface ClaudeMessage {
   uuid: string;
   parent_message_uuid?: string;
@@ -37,6 +44,8 @@ export interface ClaudeMessage {
   text?: string;
   content?: ClaudeContentBlock[];
   created_at?: string;
+  /** Files the user uploaded to this message (authoritative metadata). */
+  attachments?: ClaudeAttachment[];
 }
 
 export interface ClaudeConversation {
@@ -100,12 +109,19 @@ export interface IntegrityReport {
   complete: boolean;
 }
 
+export interface UploadedFile {
+  name: string;
+  type?: string;
+}
+
 export interface NormalizedTranscript {
   conversationId: string;
   title: string;
   capturedAt: string; // ISO timestamp, injected by the caller (no Date.now in pure core)
   messages: NormalizedMessage[];
   artifacts: Artifact[];
+  /** Files the user uploaded into the chat (from message attachments). */
+  uploads: UploadedFile[];
   integrity: IntegrityReport;
 }
 

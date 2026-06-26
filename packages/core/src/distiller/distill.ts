@@ -10,7 +10,7 @@
  */
 
 import type { BriefState, NormalizedTranscript } from "../types.js";
-import { distillDeterministic } from "./deterministic.js";
+import { distillDeterministic, dedupeFilesByStem } from "./deterministic.js";
 import { chunkTranscript, type ChunkOptions } from "./chunk.js";
 import { parseBriefSections, BriefParseError } from "./parse.js";
 import type { LlmClient } from "./llm.js";
@@ -151,17 +151,14 @@ export async function distillWithModel(
     }
   }
 
-  // 3) Union the model's files-to-attach with the deterministic referenced-file
-  // detector — the model can miss a file the regex catches, and vice versa.
-  const fileNames = new Set(
-    finalSections.filesToAttach.map((f) => f.name.toLowerCase()),
-  );
-  for (const f of deterministic.filesToAttach) {
-    if (!fileNames.has(f.name.toLowerCase())) {
-      finalSections.filesToAttach.push(f);
-      fileNames.add(f.name.toLowerCase());
-    }
-  }
+  // 3) Reconcile files-to-attach: the deterministic reconstruction is
+  // authoritative for files the chat produced; the model may add referenced
+  // ones. Union, then dedupe by STEM so the same file under different
+  // paths/extensions collapses to one (prefers the real produced file).
+  finalSections.filesToAttach = dedupeFilesByStem([
+    ...deterministic.filesToAttach,
+    ...finalSections.filesToAttach,
+  ]);
 
   return {
     brief: {

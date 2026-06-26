@@ -17,6 +17,7 @@ import type {
   VerbatimItem,
 } from "../types.js";
 import { collapseArtifactLineage } from "./dedupe.js";
+import { isSandboxPath, stemOf } from "../capture/file-types.js";
 
 /** Above this, code is better attached as a file than pasted inline. */
 const BIG_CODE_CHARS = 1500;
@@ -118,30 +119,52 @@ function fromApiMentions(transcript: NormalizedTranscript): VerbatimItem[] {
 }
 
 /**
- * Filenames mentioned in text but never produced as an artifact in the chat →
- * "referenced" files to attach. This is the piece the spec calls out: the chat
- * only ever *referred* to your real upload_handler.py; tell the user to bring it.
+ * Filenames mentioned in text but never produced in the chat → "referenced"
+ * files to attach (e.g. your real upload_handler.py the chat only saw a snippet
+ * of). Excludes sandbox-internal paths (/mnt/user-data, /home/claude, /tmp) —
+ * those are handled by file reconstruction, not re-listed as separate files —
+ * and anything sharing a STEM with a produced artifact.
  */
 function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
-  const artifactNames = new Set(
+  const artifactStems = new Set(
     transcript.artifacts
-      .map((a) => a.filename?.toLowerCase())
-      .filter((n): n is string => Boolean(n)),
+      .map((a) => (a.filename ? stemOf(a.filename) : ""))
+      .filter(Boolean),
   );
-  const mentioned = new Map<string, string>(); // lowercased → original casing
+  const mentioned = new Map<string, string>(); // stem → display name
   const all = transcript.messages.map((m) => m.text).join("\n");
   for (const m of all.matchAll(FILENAME_RE)) {
     const name = m[1];
     if (!name) continue;
-    const lower = name.toLowerCase();
-    if (artifactNames.has(lower)) continue; // the chat actually contained it
-    if (!mentioned.has(lower)) mentioned.set(lower, name);
+    if (isSandboxPath(name)) continue; // internal working path, not a user file
+    const stem = stemOf(name);
+    if (artifactStems.has(stem)) continue; // the chat actually produced it
+    if (!mentioned.has(stem)) mentioned.set(stem, name); // keep the helpful path
   }
   return [...mentioned.values()].map((name) => ({
     name,
     source: "referenced" as const,
     why: "referred to in the chat but never shown in full — attach the real file so the next reader sees more than a snippet",
   }));
+}
+
+/**
+ * Dedupe a files-to-attach list by STEM (so essay.md / essay.txt / a working
+ * copy collapse to one), preferring a "chat" deliverable over a "referenced"
+ * mention.
+ */
+export function dedupeFilesByStem(files: FileToAttach[]): FileToAttach[] {
+  const byStem = new Map<string, FileToAttach>();
+  for (const f of files) {
+    const stem = stemOf(f.name);
+    const existing = byStem.get(stem);
+    if (!existing) {
+      byStem.set(stem, f);
+    } else if (existing.source === "referenced" && f.source === "chat") {
+      byStem.set(stem, f); // a real produced file beats a referenced mention
+    }
+  }
+  return [...byStem.values()];
 }
 
 export interface DeterministicOptions {
@@ -166,11 +189,19 @@ export function distillDeterministic(
     (i) => `${i.kind}:${i.value}`,
   );
 
+  // Files the user uploaded are authoritative "bring these" items.
+  const uploadFiles: FileToAttach[] = transcript.uploads.map((u) => ({
+    name: u.name,
+    source: "referenced",
+    why: "you uploaded this to the chat — attach it so the next reader has the original",
+  }));
+
   const maxRef = opts.maxReferencedFiles ?? 25;
-  const files = dedupe(
-    [...fromArt.files, ...referencedFiles(transcript).slice(0, maxRef)],
-    (f) => f.name.toLowerCase(),
-  );
+  const files = dedupeFilesByStem([
+    ...fromArt.files,
+    ...uploadFiles,
+    ...referencedFiles(transcript).slice(0, maxRef),
+  ]);
 
   return {
     decided: [],

@@ -19,11 +19,32 @@ const BINARY_EXTS = new Set([
   "wasm", "woff", "woff2", "ttf", "otf",
 ]);
 
+/** Last path segment, e.g. "/mnt/.../essay.md" → "essay.md". */
+export function basenameOf(path: string): string {
+  return path.replace(/\/+$/, "").split(/[\\/]/).pop() ?? path;
+}
+
 /** Lower-cased extension without the dot, or "" if none. */
 export function extOf(filename: string): string {
-  const base = filename.split(/[\\/]/).pop() ?? filename;
+  const base = basenameOf(filename);
   const dot = base.lastIndexOf(".");
   return dot > 0 ? base.slice(dot + 1).toLowerCase() : "";
+}
+
+/**
+ * Lower-cased basename without extension — the key for treating the SAME logical
+ * file under different paths/extensions (essay.md, essay.txt, outputs/essay.md)
+ * as one. Used to dedupe the files-to-attach list.
+ */
+export function stemOf(path: string): string {
+  const base = basenameOf(path);
+  const dot = base.lastIndexOf(".");
+  return (dot > 0 ? base.slice(0, dot) : base).toLowerCase();
+}
+
+/** Paths inside Claude's sandbox — internal, not the user's own files. */
+export function isSandboxPath(path: string): boolean {
+  return /\/(mnt\/user-data|home\/claude|tmp)\//.test("/" + path);
 }
 
 /** True when a file's bytes must be attached rather than inlined. */

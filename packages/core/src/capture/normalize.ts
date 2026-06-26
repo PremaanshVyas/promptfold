@@ -21,6 +21,7 @@ import type {
   NormalizedTranscript,
   Role,
   UnknownBlock,
+  UploadedFile,
 } from "../types.js";
 import {
   classifyBlock,
@@ -175,6 +176,7 @@ export function normalizeConversation(
   const artifacts: Artifact[] = [];
   const toolBlocks: ClaudeContentBlock[] = [];
   const unknown: UnknownBlock[] = [];
+  const uploadsByName = new Map<string, UploadedFile>();
   let totalBlocks = 0;
   let classifiedBlocks = 0;
 
@@ -189,6 +191,17 @@ export function normalizeConversation(
     unknown.push(...n.unknown);
     totalBlocks += n.totalBlocks;
     classifiedBlocks += n.classifiedBlocks;
+
+    // Authoritative upload metadata (no reconstruction needed for these).
+    for (const att of raw.attachments ?? []) {
+      const name = att.file_name?.trim();
+      if (name && !uploadsByName.has(name.toLowerCase())) {
+        uploadsByName.set(name.toLowerCase(), {
+          name,
+          ...(att.file_type ? { type: att.file_type } : {}),
+        });
+      }
+    }
   }
 
   // Replay the sandbox file operations into final deliverables (correct name +
@@ -219,6 +232,7 @@ export function normalizeConversation(
     capturedAt: opts.capturedAt,
     messages,
     artifacts,
+    uploads: [...uploadsByName.values()],
     integrity,
   };
 }

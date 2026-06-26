@@ -8,6 +8,11 @@
 
 import type { BriefState, BriefFramings } from "@carrybot/core";
 import { STYLES } from "./styles.js";
+import {
+  exportMarkdown,
+  exportText,
+  openPrintView,
+} from "./export.js";
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -38,7 +43,6 @@ function listSection(
   return section;
 }
 
-/** A muted, dashed box showing text that gets inserted around the brief. */
 function framePreview(label: string, text: string): HTMLElement {
   const box = el("div", "cb-frame");
   box.appendChild(el("span", "cb-frame-label", label));
@@ -46,17 +50,12 @@ function framePreview(label: string, text: string): HTMLElement {
   return box;
 }
 
-function buildBody(state: BriefState, framings: BriefFramings): HTMLElement {
-  const body = el("div", "cb-body");
+/** The brief sections (no framing boxes — those are added separately). */
+function buildSections(state: BriefState): HTMLElement[] {
+  const out: HTMLElement[] = [];
 
-  // Show the resume-prompt INTRO that will be inserted when you Copy.
-  body.appendChild(
-    framePreview("inserted at the top when you copy", framings.resumeHeader),
-  );
-
-  // Loud honesty banners.
   if (!state.meta.integrity.complete) {
-    body.appendChild(
+    out.push(
       el(
         "div",
         "cb-warn",
@@ -65,23 +64,23 @@ function buildBody(state: BriefState, framings: BriefFramings): HTMLElement {
     );
   }
   for (const fb of state.meta.rawFallbacks) {
-    body.appendChild(el("div", "cb-warn", `⚠️ ${fb}`));
+    out.push(el("div", "cb-warn", `⚠️ ${fb}`));
   }
 
-  body.appendChild(
+  out.push(
     listSection(
       "Decided",
       "decided",
       state.decided.map((d) => {
         const li = el("li", undefined, d.text);
-        if (d.replaces) li.appendChild(el("span", "cb-why", `  (replaced: ${d.replaces})`));
+        if (d.replaces) li.appendChild(el("span", "cb-why", ` (replaced: ${d.replaces})`));
         return li;
       }),
       "No locked decisions found.",
     ),
   );
 
-  body.appendChild(
+  out.push(
     listSection(
       "Open",
       "open",
@@ -90,13 +89,13 @@ function buildBody(state: BriefState, framings: BriefFramings): HTMLElement {
     ),
   );
 
-  body.appendChild(
+  out.push(
     listSection(
       "Rejected (and why)",
       "rejected",
       state.rejected.map((r) => {
         const li = el("li");
-        li.appendChild(el("strong", undefined, r.idea));
+        li.appendChild(el("span", "cb-rej-idea", r.idea));
         li.appendChild(el("span", "cb-why", ` — ${r.why}`));
         return li;
       }),
@@ -110,20 +109,21 @@ function buildBody(state: BriefState, framings: BriefFramings): HTMLElement {
     verb.appendChild(el("div", "cb-empty", "No exact values extracted."));
   } else {
     for (const v of state.verbatim) {
+      const item = el("div", "cb-vitem");
+      item.appendChild(
+        el("div", "cb-vlabel", `${v.label} · ${v.kind}${v.language ? " · " + v.language : ""}`),
+      );
       if (v.kind === "code") {
-        verb.appendChild(el("div", "cb-tag", v.label + (v.language ? ` · ${v.language}` : "")));
-        verb.appendChild(el("pre", "cb-code", v.value));
+        item.appendChild(el("pre", "cb-code", v.value));
       } else {
-        const p = el("div", "cb-file");
-        p.appendChild(el("span", "cb-tag", `${v.label} (${v.kind}): `));
-        p.appendChild(el("code", undefined, v.value));
-        verb.appendChild(p);
+        item.appendChild(el("div", "cb-vvalue", v.value));
       }
+      verb.appendChild(item);
     }
   }
-  body.appendChild(verb);
+  out.push(verb);
 
-  body.appendChild(
+  out.push(
     listSection(
       "Bring these for full context",
       "",
@@ -141,34 +141,24 @@ function buildBody(state: BriefState, framings: BriefFramings): HTMLElement {
     const raw = el("div", "cb-section");
     raw.appendChild(el("h3", undefined, "Raw — could not parse (review these)"));
     for (const u of state.meta.integrity.unknown) {
-      raw.appendChild(el("div", "cb-tag", `${u.hint} · message ${u.messageUuid.slice(0, 8)}`));
+      raw.appendChild(el("div", "cb-vlabel", `${u.hint} · message ${u.messageUuid.slice(0, 8)}`));
       raw.appendChild(el("pre", "cb-code", u.preview));
     }
-    body.appendChild(raw);
+    out.push(raw);
   }
 
-  // Show the resume-prompt OUTRO that will be inserted when you Copy.
-  body.appendChild(
-    framePreview("added at the end when you copy", framings.resumeFooter),
-  );
-
-  return body;
+  return out;
 }
 
 export interface DrawerHandle {
   destroy: () => void;
 }
 
-/** Shared drawer shell (overlay + sliding panel + header). */
 function shell(
   shadow: ShadowRoot,
   subtitle: string,
   marker: string,
-): {
-  overlay: HTMLElement;
-  drawer: HTMLElement;
-  destroy: () => void;
-} {
+): { drawer: HTMLElement; destroy: () => void } {
   const overlay = el("div", "cb-overlay");
   const drawer = el("div", "cb-drawer");
 
@@ -198,12 +188,11 @@ function shell(
     shadow.appendChild(style);
   }
   shadow.appendChild(overlay);
-  return { overlay, drawer, destroy };
+  return { drawer, destroy };
 }
 
 function relativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+  const secs = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
   if (secs < 60) return "just now";
   if (secs < 3600) return `${Math.round(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.round(secs / 3600)}h ago`;
@@ -214,38 +203,71 @@ export interface BriefDrawerOptions {
   state: BriefState;
   framings: BriefFramings;
   savedAt: string;
-  /** Re-run capture + distill and replace this drawer. */
   onRegenerate: () => void;
 }
 
-/** Open the full brief drawer. */
 export function openBriefDrawer(
   shadow: ShadowRoot,
   opts: BriefDrawerOptions,
 ): DrawerHandle {
   const { state, framings, savedAt, onRegenerate } = opts;
+  const title = state.meta.title;
   const { drawer, destroy } = shell(
     shadow,
-    state.meta.title,
+    title,
     `read from data layer · ${state.meta.producedBy} · generated ${relativeTime(savedAt)}`,
   );
 
-  drawer.appendChild(buildBody(state, framings));
+  // Body: framing preview (top) → sections → framing preview (bottom).
+  const body = el("div", "cb-body");
+  const headFrame = framePreview("added at the TOP when you copy / export", framings.resumeHeader);
+  const footFrame = framePreview("added at the END when you copy / export", framings.resumeFooter);
+  body.appendChild(headFrame);
+  for (const s of buildSections(state)) body.appendChild(s);
+  body.appendChild(footFrame);
+  drawer.appendChild(body);
+
+  // Footer: framing toggle + actions.
+  let includeFraming = true;
+  const chosenText = () => (includeFraming ? framings.resumePrompt : framings.humanMarkdown);
 
   const foot = el("div", "cb-foot");
-  const copy = el("button", "cb-btn primary", "Copy (resume prompt)");
-  const regen = el("button", "cb-btn", "Regenerate");
-  const toast = el("div", "cb-toast", "Copied ✓");
-  foot.appendChild(copy);
-  foot.appendChild(regen);
-  foot.appendChild(toast);
 
-  copy.addEventListener("click", async () => {
-    await navigator.clipboard.writeText(framings.resumePrompt);
+  const toolbar = el("div", "cb-toolbar");
+  const toggleLabel = el("label", "cb-toggle");
+  const checkbox = el("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = true;
+  toggleLabel.appendChild(checkbox);
+  toggleLabel.appendChild(el("span", undefined, "Include resume framing (the intro/outro above)"));
+  toolbar.appendChild(toggleLabel);
+  foot.appendChild(toolbar);
+
+  const actions = el("div", "cb-actions");
+  const copyBtn = el("button", "cb-btn primary", "Copy");
+  const mdBtn = el("button", "cb-btn", "Markdown");
+  const txtBtn = el("button", "cb-btn ghost", "Text");
+  const pdfBtn = el("button", "cb-btn ghost", "PDF");
+  const regenBtn = el("button", "cb-btn ghost", "Regenerate");
+  const toast = el("div", "cb-toast", "Copied ✓");
+  actions.append(copyBtn, mdBtn, txtBtn, pdfBtn, regenBtn, toast);
+  foot.appendChild(actions);
+
+  checkbox.addEventListener("change", () => {
+    includeFraming = checkbox.checked;
+    headFrame.style.display = includeFraming ? "" : "none";
+    footFrame.style.display = includeFraming ? "" : "none";
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(chosenText());
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 1400);
   });
-  regen.addEventListener("click", () => {
+  mdBtn.addEventListener("click", () => exportMarkdown(title, chosenText()));
+  txtBtn.addEventListener("click", () => exportText(title, chosenText()));
+  pdfBtn.addEventListener("click", () => openPrintView(title, chosenText()));
+  regenBtn.addEventListener("click", () => {
     destroy();
     onRegenerate();
   });
@@ -259,7 +281,6 @@ export interface NeedsKeyOptions {
   onCopyTranscript: () => Promise<void>;
 }
 
-/** Open the no-key panel: a clear CTA + a free clean-transcript export. */
 export function openNeedsKeyDrawer(
   shadow: ShadowRoot,
   opts: NeedsKeyOptions,
@@ -281,12 +302,12 @@ export function openNeedsKeyDrawer(
   drawer.appendChild(panel);
 
   const foot = el("div", "cb-foot");
+  const actions = el("div", "cb-actions");
   const settingsBtn = el("button", "cb-btn primary", "Open settings");
   const copyBtn = el("button", "cb-btn", "Copy clean transcript");
   const toast = el("div", "cb-toast", "Copied ✓");
-  foot.appendChild(settingsBtn);
-  foot.appendChild(copyBtn);
-  foot.appendChild(toast);
+  actions.append(settingsBtn, copyBtn, toast);
+  foot.appendChild(actions);
 
   settingsBtn.addEventListener("click", () => opts.onOpenSettings());
   copyBtn.addEventListener("click", async () => {

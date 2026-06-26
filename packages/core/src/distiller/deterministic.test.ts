@@ -49,6 +49,35 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(ref).toBeUndefined();
   });
 
+  it("does NOT list a sandbox output path as a separate referenced file", () => {
+    // The assistant mentions the internal output path in its text. It must not
+    // appear as a duplicate of the real deliverable.
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "essay",
+      current_leaf_message_uuid: "a1",
+      chat_messages: [
+        { uuid: "u1", sender: "human", content: [{ type: "text", text: "write it" }] },
+        {
+          uuid: "a1",
+          parent_message_uuid: "u1",
+          sender: "assistant",
+          content: [
+            { type: "text", text: "Saved to /mnt/user-data/outputs/essay.md and essay.txt" },
+            { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/essay.txt", file_text: "the essay" } },
+            { type: "tool_use", name: "present_files", input: { filepaths: ["/mnt/user-data/outputs/essay.txt"] } },
+          ],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    // Exactly one file for the essay (stem "essay"), the produced deliverable.
+    const essayFiles = brief.filesToAttach.filter((f) => f.name.toLowerCase().includes("essay"));
+    expect(essayFiles).toHaveLength(1);
+    expect(essayFiles[0]?.source).toBe("chat");
+  });
+
   it("extracts API endpoints and urls as verbatim", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
