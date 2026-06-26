@@ -13,6 +13,8 @@
 import {
   captureConversation,
   conversationIdFromUrl,
+  captureChatGptConversation,
+  chatGptConversationIdFromUrl,
   transcriptFromMessages,
   type FetchLike,
   type NormalizedTranscript,
@@ -115,7 +117,32 @@ const genericDomAdapter: CaptureAdapter = {
   },
 };
 
-const ADAPTERS: CaptureAdapter[] = [claudeAdapter /* add precise adapters here */];
+// ── ChatGPT: precise, data-layer adapter ───────────────────────────────────
+const chatgptAdapter: CaptureAdapter = {
+  id: "chatgpt",
+  source: "data layer",
+  matches: (h) =>
+    h === "chatgpt.com" || h === "chat.openai.com" || h.endsWith(".chatgpt.com"),
+  async capture(capturedAt) {
+    const convoId = chatGptConversationIdFromUrl(location.href);
+    if (!convoId) {
+      throw new Error(
+        "Open a saved ChatGPT conversation first (temporary chats can't be read).",
+      );
+    }
+    return captureChatGptConversation(convoId, {
+      fetchImpl,
+      capturedAt,
+      baseUrl: location.origin,
+    });
+  },
+};
+
+const ADAPTERS: CaptureAdapter[] = [
+  claudeAdapter,
+  chatgptAdapter,
+  /* add precise adapters here */
+];
 
 export function pickAdapter(hostname: string): CaptureAdapter {
   return ADAPTERS.find((a) => a.matches(hostname)) ?? genericDomAdapter;

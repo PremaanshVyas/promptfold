@@ -19,3 +19,11 @@ export {
   extractAntArtifactsFromText,
   type BlockClassification,
 } from "./artifact-parser.js";
+export {
+  captureChatGptConversation,
+  normalizeChatGptConversation,
+  chatGptConversationIdFromUrl,
+  linearBranch,
+  type CaptureChatGptOptions,
+  type GptConversation,
+} from "./chatgpt-api.js";
