@@ -35,12 +35,19 @@ const SHARED_RULES = `Rules you follow without exception:
   chunk you are given is labelled with its position; later chunks supersede
   earlier ones.
 - For every decision, capture what it REPLACED in "replaces" when known.
+- FINAL INLINE DELIVERABLE. If the user asked the assistant to write a specific
+  piece of text (an email, a letter, a message, a cover letter, a short post, a
+  bio) and it lives ONLY inline in the chat (not saved as a file), put the FINAL
+  COMPLETE version in "verbatim" (kind "constraint", label like "final email"),
+  not just the edits to it. That text IS the deliverable; keep it whole even if
+  it runs a paragraph or two. (A genuinely long document, a multi-page essay or a
+  whole code file, still goes in "filesToAttach" instead.)
 - "filesToAttach" lists things to bring for full context: big/binary files from
   the chat, and things the chat only REFERRED to but never showed. Each needs
   one line in "why". Do not list intermediate drafts, only the final file.
 - Keep each "verbatim" value SHORT (a value, a path, a constraint, a small
-  snippet). NEVER paste a whole file or a long essay into "verbatim", list it in
-  "filesToAttach" instead. Long inline values overflow the response and break it.
+  snippet), EXCEPT the single final inline deliverable above. NEVER paste a whole
+  file or a long essay into "verbatim"; list those in "filesToAttach" instead.
 - Before you finish: verify the JSON parses, every verbatim value is copied
   exactly, and no rejected reason was invented.
 - Output ONLY valid, COMPLETE JSON matching the shape. No prose, no markdown
