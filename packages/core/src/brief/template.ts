@@ -11,6 +11,15 @@
 
 import type { BriefState, BriefFramings, VerbatimItem } from "../types.js";
 
+/** The framing wrapped around the brief when pasting into another chatbot. */
+export const RESUME_HEADER =
+  "Here's where we were on this project. Continue from this exact state — do " +
+  'not re-suggest anything under "Rejected", and treat everything under ' +
+  '"Verbatim" as fixed and exact.';
+
+export const RESUME_FOOTER =
+  "Pick up from the Open items above. What's the next step?";
+
 function section(title: string, body: string): string {
   return body.trim().length > 0 ? `## ${title}\n\n${body.trim()}\n` : "";
 }
@@ -95,17 +104,20 @@ export function renderBrief(state: BriefState): BriefFramings {
     .join("\n");
 
   const resumePrompt = [
-    "Here's where we were on this project. Continue from this exact state — " +
-      "do not re-suggest anything under \"Rejected\", and treat everything under " +
-      '"Verbatim" as fixed and exact.',
+    RESUME_HEADER,
     "",
     banner.trim().length > 0 ? banner : "",
     body,
     "",
-    "Pick up from the Open items above. What's the next step?",
+    RESUME_FOOTER,
   ]
     .filter((s) => s.length > 0)
     .join("\n");
 
-  return { humanMarkdown, resumePrompt };
+  return {
+    humanMarkdown,
+    resumePrompt,
+    resumeHeader: RESUME_HEADER,
+    resumeFooter: RESUME_FOOTER,
+  };
 }

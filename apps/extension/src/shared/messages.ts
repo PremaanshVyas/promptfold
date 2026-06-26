@@ -29,9 +29,18 @@ export interface ProgressResponse {
   phase: string;
 }
 
+/** No API key set — the brief needs one; the content script offers a raw export. */
+export interface NeedsKeyResponse {
+  type: "needsKey";
+}
+
 export interface ErrorResponse {
   type: "error";
   message: string;
 }
 
-export type WorkerResponse = DistillResponse | ProgressResponse | ErrorResponse;
+export type WorkerResponse =
+  | DistillResponse
+  | ProgressResponse
+  | NeedsKeyResponse
+  | ErrorResponse;

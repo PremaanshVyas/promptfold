@@ -184,4 +184,8 @@ export interface BriefFramings {
   humanMarkdown: string;
   /** "Here's where we were, continue from here" framing for any chatbot. */
   resumePrompt: string;
+  /** The intro line prepended to the resume prompt (shown to the user). */
+  resumeHeader: string;
+  /** The outro line appended to the resume prompt (shown to the user). */
+  resumeFooter: string;
 }

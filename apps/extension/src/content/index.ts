@@ -1,33 +1,37 @@
 /**
  * Content script — runs on claude.ai.
  *
- * 1. Mounts a Shadow-root host + a floating "Carry" button. (Floating, not
- *    docked to Claude's message box, so a Claude UI redesign won't break us —
- *    minimizing DOM coupling is part of the maintenance strategy.)
- * 2. On click: capture the conversation same-origin (session cookie attaches
- *    automatically), hand the transcript to the worker to distill, render the
- *    drawer.
+ * 1. Mounts a Shadow-root host + a floating "Carry" button.
+ * 2. On click: if this chat already has a saved brief, show it instantly (with a
+ *    Regenerate option). Otherwise capture same-origin, distill via the worker,
+ *    cache the result, and show it. No key → a clear CTA + free clean transcript.
  */
 
 import {
   captureConversation,
   conversationIdFromUrl,
+  renderTranscriptText,
   type FetchLike,
+  type NormalizedTranscript,
 } from "@carrybot/core";
 import type {
   DistillResponse,
   ErrorResponse,
+  NeedsKeyResponse,
   ProgressResponse,
   WorkerResponse,
 } from "../shared/messages.js";
 import { STYLES } from "./styles.js";
-import { openDrawer, type DrawerHandle } from "./drawer.js";
+import {
+  openBriefDrawer,
+  openNeedsKeyDrawer,
+  type DrawerHandle,
+} from "./drawer.js";
+import { loadCachedBrief, saveCachedBrief } from "../shared/cache.js";
 
 const HOST_ID = "carrybot-host";
 
-// window.fetch is structurally compatible with core's FetchLike.
-const fetchImpl: FetchLike = (url, init) =>
-  fetch(url, init as RequestInit);
+const fetchImpl: FetchLike = (url, init) => fetch(url, init as RequestInit);
 
 function mountHost(): ShadowRoot {
   let host = document.getElementById(HOST_ID);
@@ -49,7 +53,7 @@ let openHandle: DrawerHandle | null = null;
 function distillViaPort(
   transcript: unknown,
   onProgress: (p: ProgressResponse) => void,
-): Promise<DistillResponse | ErrorResponse> {
+): Promise<DistillResponse | NeedsKeyResponse | ErrorResponse> {
   return new Promise((resolve) => {
     let settled = false;
     const port = chrome.runtime.connect({ name: "carrybot" });
@@ -72,43 +76,90 @@ function distillViaPort(
   });
 }
 
+function openSettings() {
+  window.open(chrome.runtime.getURL("options.html"), "_blank");
+}
+
+/** Capture + distill + cache + render. */
+async function generate(
+  shadow: ShadowRoot,
+  button: HTMLButtonElement,
+  convoId: string,
+) {
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Reading conversation…";
+
+  let transcript: NormalizedTranscript;
+  try {
+    transcript = await captureConversation(convoId, {
+      fetchImpl,
+      capturedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    alert("carrybot capture failed: " + (err as Error).message);
+    button.disabled = false;
+    button.textContent = original;
+    return;
+  }
+
+  button.textContent = "Distilling…";
+  const resp = await distillViaPort(transcript, (p) => {
+    button.textContent =
+      p.phase === "merging" ? "Merging…" : `Distilling ${p.done}/${p.total}…`;
+  });
+  button.disabled = false;
+  button.textContent = original;
+
+  if (resp.type === "needsKey") {
+    openHandle = openNeedsKeyDrawer(shadow, {
+      onOpenSettings: openSettings,
+      onCopyTranscript: async () => {
+        await navigator.clipboard.writeText(renderTranscriptText(transcript));
+      },
+    });
+    return;
+  }
+  if (resp.type === "error") {
+    alert("carrybot: " + resp.message);
+    return;
+  }
+
+  const savedAt = new Date().toISOString();
+  await saveCachedBrief(convoId, {
+    state: resp.state,
+    framings: resp.framings,
+    producedBy: resp.producedBy,
+    savedAt,
+  });
+  openHandle = openBriefDrawer(shadow, {
+    state: resp.state,
+    framings: resp.framings,
+    savedAt,
+    onRegenerate: () => void generate(shadow, button, convoId),
+  });
+}
+
 async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
   const convoId = conversationIdFromUrl(location.href);
   if (!convoId) {
     alert("Open a Claude conversation first, then click Carry.");
     return;
   }
-
   openHandle?.destroy();
-  const original = button.textContent;
-  button.disabled = true;
-  button.textContent = "Reading conversation…";
 
-  try {
-    const transcript = await captureConversation(convoId, {
-      fetchImpl,
-      capturedAt: new Date().toISOString(),
+  // Show the saved brief instantly if we have one; let the user Regenerate.
+  const cached = await loadCachedBrief(convoId);
+  if (cached) {
+    openHandle = openBriefDrawer(shadow, {
+      state: cached.state,
+      framings: cached.framings,
+      savedAt: cached.savedAt,
+      onRegenerate: () => void generate(shadow, button, convoId),
     });
-
-    button.textContent = "Distilling…";
-    const resp = await distillViaPort(transcript, (p) => {
-      button.textContent =
-        p.phase === "merging"
-          ? "Merging…"
-          : `Distilling ${p.done}/${p.total}…`;
-    });
-
-    if (resp.type === "error") {
-      alert("carrybot: " + resp.message);
-      return;
-    }
-    openHandle = openDrawer(shadow, resp.state, resp.framings);
-  } catch (err) {
-    alert("carrybot capture failed: " + (err as Error).message);
-  } finally {
-    button.disabled = false;
-    button.textContent = original;
+    return;
   }
+  await generate(shadow, button, convoId);
 }
 
 function injectButton(shadow: ShadowRoot) {
@@ -126,7 +177,6 @@ function init() {
   injectButton(shadow);
 }
 
-// Claude is a SPA; re-assert the button on navigation without duplicating it.
 init();
 let lastUrl = location.href;
 new MutationObserver(() => {

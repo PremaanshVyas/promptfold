@@ -7,12 +7,7 @@
  * Nothing leaves the machine except the call to the user's chosen provider.
  */
 
-import {
-  distillWithModel,
-  distillDeterministic,
-  makeLlmClient,
-  renderBrief,
-} from "@carrybot/core";
+import { distillWithModel, makeLlmClient, renderBrief } from "@carrybot/core";
 import type { DistillRequest, WorkerResponse } from "../shared/messages.js";
 import { loadSettings, hasKey } from "../shared/settings.js";
 
@@ -35,28 +30,23 @@ async function runDistill(
   post: (msg: WorkerResponse) => void,
 ): Promise<void> {
   const settings = await loadSettings();
+  if (!hasKey(settings)) {
+    // No key → the brief needs a model. Tell the content script, which offers a
+    // clean raw export instead of a hollow, reasoning-free "brief".
+    post({ type: "needsKey" });
+    return;
+  }
   const stopKeepAlive = startKeepAlive();
   try {
-    if (hasKey(settings)) {
-      const client = makeLlmClient({
-        provider: settings.provider,
-        apiKey: settings.apiKey,
-        model: settings.model,
-      });
-      const { brief } = await distillWithModel(req.transcript, client, {
-        onProgress: (done, total, phase) =>
-          post({ type: "progress", done, total, phase }),
-      });
-      post({
-        type: "brief",
-        framings: renderBrief(brief),
-        state: brief,
-        producedBy: brief.meta.producedBy,
-      });
-      return;
-    }
-    // Tier 0 — no key, still a complete, useful handoff.
-    const brief = distillDeterministic(req.transcript);
+    const client = makeLlmClient({
+      provider: settings.provider,
+      apiKey: settings.apiKey,
+      model: settings.model,
+    });
+    const { brief } = await distillWithModel(req.transcript, client, {
+      onProgress: (done, total, phase) =>
+        post({ type: "progress", done, total, phase }),
+    });
     post({
       type: "brief",
       framings: renderBrief(brief),

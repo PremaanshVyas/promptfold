@@ -72,6 +72,19 @@ export const STYLES = `
 
 .cb-empty { color: #8a8a8a; font-size: 13px; font-style: italic; }
 
+.cb-frame {
+  border: 1px dashed #d8d4cc; border-radius: 8px; padding: 8px 10px;
+  font-size: 12.5px; color: #6b6b6b; background: #faf9f7; margin: 4px 0 14px;
+}
+.cb-frame .cb-frame-label {
+  display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+  color: #a8a29a; margin-bottom: 3px;
+}
+
+.cb-needkey { padding: 28px 22px; }
+.cb-needkey h2 { font-size: 17px; margin: 0 0 8px; }
+.cb-needkey p { font-size: 14px; color: #6b6b6b; line-height: 1.5; }
+
 .cb-foot {
   padding: 12px 20px; border-top: 1px solid #ececec;
   display: flex; gap: 10px; align-items: center;
@@ -91,5 +104,6 @@ export const STYLES = `
   .cb-code { background: #2a2925; border-color: #38362f; color: #ededed; }
   .cb-btn { background: #2a2925; color: #ededed; border-color: #4a4840; }
   .cb-file code { background: #2a2925; }
+  .cb-frame { background: #2a2925; border-color: #4a4840; color: #c8c4bc; }
 }
 `;
