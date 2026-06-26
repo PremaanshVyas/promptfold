@@ -160,6 +160,20 @@ export async function distillWithModel(
     ...finalSections.filesToAttach,
   ]);
 
+  // 4) GUARANTEE tables: the model often summarizes a table into prose. Every
+  // markdown table actually present in the chat is force-added to verbatim,
+  // regardless of what the model returned. This is the "without fail" path.
+  const tableKey = (v: string) => v.replace(/\s+/g, "");
+  const haveTable = new Set(
+    finalSections.verbatim.filter((v) => v.kind === "table").map((v) => tableKey(v.value)),
+  );
+  for (const v of deterministic.verbatim) {
+    if (v.kind === "table" && !haveTable.has(tableKey(v.value))) {
+      finalSections.verbatim.push(v);
+      haveTable.add(tableKey(v.value));
+    }
+  }
+
   return {
     brief: {
       now: finalSections.now,

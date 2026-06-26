@@ -82,6 +82,56 @@ function fromArtifacts(artifacts: Artifact[]): {
   return { verbatim, files };
 }
 
+/**
+ * Pull every markdown table out of a text. A table is a row with `|`, followed
+ * by a separator row (`| --- | --- |`), followed by data rows. Platform-agnostic:
+ * tables are inline markdown on every chatbot, so this finds them in any chat.
+ */
+export function extractMarkdownTables(text: string): string[] {
+  const lines = text.split("\n");
+  const tables: string[] = [];
+  const isSep = (l: string) => /^[\s|:-]+$/.test(l) && l.includes("-") && l.includes("|");
+  let i = 0;
+  while (i < lines.length) {
+    const header = lines[i] ?? "";
+    if (header.includes("|") && isSep(lines[i + 1] ?? "")) {
+      const block = [header.trim(), (lines[i + 1] ?? "").trim()];
+      let j = i + 2;
+      while (j < lines.length && (lines[j] ?? "").includes("|") && (lines[j] ?? "").trim() !== "") {
+        block.push((lines[j] ?? "").trim());
+        j++;
+      }
+      if (block.length >= 3) tables.push(block.join("\n")); // header + sep + ≥1 row
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return tables;
+}
+
+/** Tables from messages AND produced artifacts (canvas docs), deduped. */
+function fromTables(
+  transcript: NormalizedTranscript,
+  artifacts: Artifact[],
+): VerbatimItem[] {
+  const items: VerbatimItem[] = [];
+  const seen = new Set<string>();
+  const sources = [
+    ...transcript.messages.map((m) => m.text),
+    ...artifacts.map((a) => a.content),
+  ];
+  for (const text of sources) {
+    for (const table of extractMarkdownTables(text)) {
+      const key = table.replace(/\s+/g, "");
+      if (key.length < 12 || seen.has(key)) continue;
+      seen.add(key);
+      items.push({ kind: "table", label: "table", value: table });
+    }
+  }
+  return items;
+}
+
 /** Inline fenced code blocks in message text → verbatim code (deduped). */
 function fromFencedCode(transcript: NormalizedTranscript): VerbatimItem[] {
   const items: VerbatimItem[] = [];
@@ -182,6 +232,7 @@ export function distillDeterministic(
   const fromArt = fromArtifacts(artifacts);
   const verbatim = dedupe(
     [
+      ...fromTables(transcript, artifacts),
       ...fromArt.verbatim,
       ...fromFencedCode(transcript),
       ...fromApiMentions(transcript),

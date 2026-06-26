@@ -78,6 +78,25 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(essayFiles[0]?.source).toBe("chat");
   });
 
+  it("force-captures a markdown table from the chat into verbatim", () => {
+    const table =
+      "| Brand | Sodium | Additives |\n| --- | --- | --- |\n| Liquid IV | 500mg | yes |\n| LMNT | 1000mg | no |";
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "electrolytes",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "compare them" }] },
+        { uuid: "a", sender: "assistant", content: [{ type: "text", text: `Here you go:\n\n${table}\n\nLMNT wins on sodium.` }] },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    const tableItem = brief.verbatim.find((v) => v.kind === "table");
+    expect(tableItem).toBeDefined();
+    expect(tableItem?.value).toContain("LMNT");
+    expect(tableItem?.value).toContain("1000mg");
+  });
+
   it("extracts API endpoints and urls as verbatim", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
