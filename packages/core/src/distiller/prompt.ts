@@ -30,7 +30,11 @@ const SHARED_RULES = `Rules you follow without exception:
 - "filesToAttach" lists things to bring for full context: big things from the
   chat better as a file, and things the chat only REFERRED to but never showed.
   Each needs one line in "why".
-- Output ONLY valid JSON matching the shape. No prose, no markdown fences.`;
+- Keep each "verbatim" value SHORT (a value, a path, a constraint, a small
+  snippet). NEVER paste a whole file or a long essay into "verbatim" — list it in
+  "filesToAttach" instead. Long inline values overflow the response and break it.
+- Output ONLY valid, COMPLETE JSON matching the shape. No prose, no markdown
+  fences. If you have many items, be terse so the JSON finishes within limits.`;
 
 /** System prompt for distilling ONE chunk into a mini-brief. */
 export function chunkSystemPrompt(): string {

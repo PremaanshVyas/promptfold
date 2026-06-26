@@ -42,6 +42,13 @@ export const DEFAULT_MODELS: Record<Provider, string> = {
   openai: "gpt-4o",
 };
 
+/**
+ * Output cap. The merge can emit many items across a long chat; 4096 truncated
+ * it mid-array and broke the JSON. 8192 gives headroom, and the parser salvages
+ * the complete items if a giant chat ever still overruns.
+ */
+const MAX_OUTPUT_TOKENS = 8192;
+
 interface HttpResponse {
   ok: boolean;
   status: number;
@@ -75,7 +82,7 @@ class AnthropicClient implements LlmClient {
       },
       body: JSON.stringify({
         model: this.cfg.model,
-        max_tokens: 4096,
+        max_tokens: MAX_OUTPUT_TOKENS,
         system: req.system,
         messages: [{ role: "user", content: req.user }],
       }),
@@ -117,6 +124,7 @@ class OpenAiClient implements LlmClient {
       },
       body: JSON.stringify({
         model: this.cfg.model,
+        max_tokens: MAX_OUTPUT_TOKENS,
         messages: [
           { role: "system", content: req.system },
           { role: "user", content: req.user },

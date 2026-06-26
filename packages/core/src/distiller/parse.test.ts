@@ -42,4 +42,20 @@ describe("parseBriefSections", () => {
   it("throws BriefParseError when there is no JSON object", () => {
     expect(() => parseBriefSections("sorry, no.")).toThrow(BriefParseError);
   });
+
+  it("salvages complete items from JSON truncated mid-array (the merge cap bug)", () => {
+    // Simulates the model hitting its token cap partway through the 3rd decision.
+    const truncated =
+      '{"decided":[{"text":"use postgres"},{"text":"timeout is 60"},{"text":"interview on June 3';
+    const s = parseBriefSections(truncated);
+    expect(s.decided.map((d) => d.text)).toEqual(["use postgres", "timeout is 60"]);
+  });
+
+  it("salvages across earlier sections when a later section is cut off", () => {
+    const truncated =
+      '{"decided":[{"text":"a"}],"rejected":[{"idea":"b","why":"c"}],"verbatim":[{"kind":"number","label":"x","value":"6';
+    const s = parseBriefSections(truncated);
+    expect(s.decided[0]?.text).toBe("a");
+    expect(s.rejected[0]?.idea).toBe("b");
+  });
 });

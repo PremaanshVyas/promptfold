@@ -49,6 +49,61 @@ function extractJsonObject(text: string): string {
   return body.slice(start, end + 1);
 }
 
+/**
+ * Salvage a truncated JSON object (the common failure when an LLM hits its
+ * output cap mid-array). Walks string-aware, cuts after the last COMPLETE array
+ * element, and closes any still-open arrays/objects. Returns valid JSON holding
+ * every complete item, or null if nothing can be recovered.
+ */
+function salvageTruncatedJson(candidate: string): string | null {
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
+  let lastElementEnd = -1;
+
+  for (let i = 0; i < candidate.length; i++) {
+    const ch = candidate[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}" || ch === "]") {
+      stack.pop();
+      // A close while the enclosing container is an array = a finished element.
+      if (stack[stack.length - 1] === "[") lastElementEnd = i + 1;
+    }
+  }
+  if (lastElementEnd === -1) return null;
+
+  const head = candidate.slice(0, lastElementEnd);
+
+  // Recompute which containers remain open for `head`, then close them.
+  let s2 = false;
+  let e2 = false;
+  const open: string[] = [];
+  for (let i = 0; i < head.length; i++) {
+    const ch = head[i];
+    if (s2) {
+      if (e2) e2 = false;
+      else if (ch === "\\") e2 = true;
+      else if (ch === '"') s2 = false;
+      continue;
+    }
+    if (ch === '"') s2 = true;
+    else if (ch === "{" || ch === "[") open.push(ch);
+    else if (ch === "}" || ch === "]") open.pop();
+  }
+  let closed = head;
+  for (let i = open.length - 1; i >= 0; i--) {
+    closed += open[i] === "{" ? "}" : "]";
+  }
+  return closed;
+}
+
 function asString(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
@@ -77,10 +132,24 @@ export function parseBriefSections(text: string): BriefSections {
   try {
     obj = JSON.parse(jsonText) as Record<string, unknown>;
   } catch (err) {
-    throw new BriefParseError(
-      `Model output was not valid JSON: ${(err as Error).message}`,
-      text,
-    );
+    // Most often the model hit its output cap mid-array. Try to salvage every
+    // complete item rather than throwing the whole thing away.
+    const repaired = salvageTruncatedJson(jsonText);
+    if (repaired) {
+      try {
+        obj = JSON.parse(repaired) as Record<string, unknown>;
+      } catch {
+        throw new BriefParseError(
+          `Model output was not valid JSON: ${(err as Error).message}`,
+          text,
+        );
+      }
+    } else {
+      throw new BriefParseError(
+        `Model output was not valid JSON: ${(err as Error).message}`,
+        text,
+      );
+    }
   }
 
   const decided: Decision[] = asArray(obj["decided"])
