@@ -1,0 +1,36 @@
+{
+  "generatedFor": "(none)",
+  "judged": false,
+  "entries": [
+    {
+      "id": "db-choice",
+      "description": "A database decision with a rejected alternative and a value that changed mid-chat.",
+      "fullChars": 716,
+      "briefChars": 311,
+      "reduction": 0.5656424581005586,
+      "integrityComplete": true,
+      "sections": {
+        "decided": 0,
+        "open": 0,
+        "rejected": 0,
+        "verbatim": 0,
+        "files": 1
+      }
+    },
+    {
+      "id": "auth-approach",
+      "description": "A non-coding-heavy decision chat with an explicitly rejected approach.",
+      "fullChars": 432,
+      "briefChars": 133,
+      "reduction": 0.6921296296296297,
+      "integrityComplete": true,
+      "sections": {
+        "decided": 0,
+        "open": 0,
+        "rejected": 0,
+        "verbatim": 0,
+        "files": 0
+      }
+    }
+  ]
+}

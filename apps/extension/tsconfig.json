@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["chrome", "react", "react-dom"],
+    "noEmit": true,
+    "paths": {
+      "@carrybot/core": ["../../packages/core/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "build.mjs"],
+  "exclude": ["node_modules", "dist"]
+}

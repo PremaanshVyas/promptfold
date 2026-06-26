@@ -1,0 +1,37 @@
+/**
+ * Typed wrapper over chrome.storage.local for BYOK settings.
+ *
+ * The API key lives here, on the user's machine, and is read ONLY by the
+ * service worker when making the LLM call. It is never logged, never sent to
+ * any carrybot server (there is none), and never injected into the page.
+ */
+
+import type { Provider } from "@carrybot/core";
+
+export interface Settings {
+  provider: Provider;
+  apiKey: string;
+  model: string;
+}
+
+const KEY = "carrybot.settings";
+
+export const DEFAULT_SETTINGS: Settings = {
+  provider: "anthropic",
+  apiKey: "",
+  model: "claude-sonnet-4-6",
+};
+
+export async function loadSettings(): Promise<Settings> {
+  const got = await chrome.storage.local.get(KEY);
+  const raw = got[KEY] as Partial<Settings> | undefined;
+  return { ...DEFAULT_SETTINGS, ...(raw ?? {}) };
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  await chrome.storage.local.set({ [KEY]: settings });
+}
+
+export function hasKey(settings: Settings): boolean {
+  return settings.apiKey.trim().length > 0;
+}

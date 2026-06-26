@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────
+# carrybot — .gitignore
+# Security-first: this file exists BEFORE any code, so secrets can
+# never enter git history. Nothing sensitive is ever committed.
+# ─────────────────────────────────────────────────────────────
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# ── Secrets & local config (NEVER commit) ──
+.env
+.env.*
+!.env.example
+*.local
+**/secrets.*
+**/*.key
+**/*.pem
+api-keys.json
+.carrybot-key
+
+# Eval fixtures may contain real chat data — only sanitized fixtures are committed.
+# Raw, unsanitized captures go here and are ignored:
+fixtures/raw/
+eval/private/
+*.raw.json
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage/
+.vitest/
+playwright-report/
+test-results/
+
+# Misc
+*.tgz
+.cache/

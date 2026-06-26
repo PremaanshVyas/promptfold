@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "carrybot — context handoff",
+  "version": "0.1.0",
+  "description": "One click turns a long Claude chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*"
+  ],
+  "background": {
+    "service_worker": "worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_title": "carrybot — open settings"
+  }
+}
