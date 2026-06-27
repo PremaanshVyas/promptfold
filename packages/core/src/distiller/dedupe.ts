@@ -40,8 +40,18 @@ export function collapseArtifactLineage(
 
   for (const art of artifacts) {
     const set = tokenSet(art.content);
+    // Empty/near-empty artifacts (e.g. binary deliverables with no captured
+    // bytes, or tiny files) can't be compared by content, every empty looks
+    // identical (jaccard ∅,∅ = 1). Never lineage-merge them: a docx, a pdf and
+    // an xlsx are separate deliverables, not drafts of one document.
+    if (set.size < 3) {
+      kept.push(art);
+      keptSets.push(set);
+      continue;
+    }
     let mergedInto = -1;
     for (let i = 0; i < kept.length; i++) {
+      if (keptSets[i]!.size < 3) continue; // don't merge into an empty bucket
       if (jaccard(set, keptSets[i]!) >= threshold) {
         mergedInto = i;
         break;

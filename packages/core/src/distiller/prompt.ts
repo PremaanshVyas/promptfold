@@ -38,6 +38,11 @@ const SHARED_RULES = `Rules you follow without exception:
   build step looks more important. A salient mid-chat deliverable is NOT "now"
   unless the last turn is still about it. If the last turns shifted topic (e.g.
   to reviewing/testing/iterating), "now" reflects THAT, not the old frontier.
+  ACCOUNT FOR EVERY DELIVERABLE: if the chat produced files, "now" must reflect
+  ALL of them (every file, by name or exact count and types), never a subset, and
+  never abstract "six files (docx, pdf, xlsx, md, csv, json)" into "two
+  artifacts". For a multi-file build, the file COUNT is part of the state, a
+  reader who sees an undercount thinks the missing files do not exist yet.
 - GROUND EVERYTHING. Before you record an item, find the exact place in the text
   that supports it. If you cannot point to it, do not record it. Never invent a
   decision, an open thread, a value, or a reason.

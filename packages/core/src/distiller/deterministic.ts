@@ -137,8 +137,11 @@ function fromTables(
   return items;
 }
 
-// Spreadsheet / cell formula: =B2/B3, =SUM(A1:A3)*C2, etc. NOT an API endpoint.
-const FORMULA_RE = /=\s*[A-Z]{1,3}\$?\d{1,4}\s*(?:[-+*/]\s*\$?[A-Z]{1,3}\$?\d{1,4}\s*)+/g;
+// Spreadsheet / cell formula, with an optional target cell: B12=B5+B6+B7 or
+// =B2/B3. Captures the "Bxx=" prefix when present so the cell is named, exactly
+// as the file has it. NOT an API endpoint.
+const FORMULA_RE =
+  /(?:\b[A-Z]{1,3}\$?\d{1,4}\s*=\s*|=\s*)[A-Z]{1,3}\$?\d{1,4}(?:\s*[-+*/]\s*\$?[A-Z]{1,3}\$?\d{1,4})+/g;
 
 /**
  * Record that an image was SHOWN, by its subject, from the STRUCTURED
@@ -212,12 +215,20 @@ function fromApiMentions(transcript: NormalizedTranscript): VerbatimItem[] {
   return dedupe(items, (i) => i.value);
 }
 
+/** A web URL/host like nutritionvalue.org/x.html, NOT a file the user made. */
+function looksLikeUrl(name: string): boolean {
+  const firstSeg = name.split("/")[0] ?? "";
+  // A domain host (label.tld) before the first slash. Real paths ("services/
+  // auth.py", "./config.yaml") have no dotted host segment there.
+  return name.includes("/") && /^[a-z0-9-]+\.[a-z]{2,}$/i.test(firstSeg);
+}
+
 /**
  * Filenames mentioned in text but never produced in the chat → "referenced"
  * files to attach (e.g. your real upload_handler.py the chat only saw a snippet
  * of). Excludes sandbox-internal paths (/mnt/user-data, /home/claude, /tmp),
- * which file reconstruction already handles, and anything sharing a STEM with a
- * produced artifact.
+ * which file reconstruction already handles, web URLs (a link that flew by is
+ * not an attachable file), and anything sharing a STEM with a produced artifact.
  */
 function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
   const artifactStems = new Set(
@@ -231,6 +242,7 @@ function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
     const name = m[1];
     if (!name) continue;
     if (isSandboxPath(name)) continue; // internal working path, not a user file
+    if (looksLikeUrl(name)) continue; // a link, not a file you can attach
     const stem = stemOf(name);
     if (artifactStems.has(stem)) continue; // the chat actually produced it
     if (!mentioned.has(stem)) mentioned.set(stem, name); // keep the helpful path
@@ -243,22 +255,36 @@ function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
 }
 
 /**
- * Dedupe a files-to-attach list by STEM (so essay.md / essay.txt / a working
- * copy collapse to one), preferring a "chat" deliverable over a "referenced"
- * mention.
+ * Reconcile a files-to-attach list:
+ *   - keep EVERY distinct produced ("chat") file, deduped by full name, so a
+ *     report delivered as both report.docx and report.pdf keeps BOTH (they are
+ *     separate deliverables, not a working copy of one another);
+ *   - drop a "referenced" mention whose STEM matches a produced file (the chat
+ *     made the real thing, the mention is redundant), and dedupe the remaining
+ *     referenced mentions by stem.
  */
 export function dedupeFilesByStem(files: FileToAttach[]): FileToAttach[] {
-  const byStem = new Map<string, FileToAttach>();
+  const producedStems = new Set(
+    files.filter((f) => f.source === "chat").map((f) => stemOf(f.name)),
+  );
+  const out: FileToAttach[] = [];
+  const seenChatName = new Set<string>();
+  const seenRefStem = new Set<string>();
   for (const f of files) {
-    const stem = stemOf(f.name);
-    const existing = byStem.get(stem);
-    if (!existing) {
-      byStem.set(stem, f);
-    } else if (existing.source === "referenced" && f.source === "chat") {
-      byStem.set(stem, f); // a real produced file beats a referenced mention
+    if (f.source === "chat") {
+      const key = f.name.toLowerCase();
+      if (seenChatName.has(key)) continue;
+      seenChatName.add(key);
+      out.push(f);
+    } else {
+      const stem = stemOf(f.name);
+      if (producedStems.has(stem)) continue; // a produced file already covers it
+      if (seenRefStem.has(stem)) continue;
+      seenRefStem.add(stem);
+      out.push(f);
     }
   }
-  return [...byStem.values()];
+  return out;
 }
 
 export interface DeterministicOptions {

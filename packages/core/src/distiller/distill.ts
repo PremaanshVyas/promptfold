@@ -197,6 +197,23 @@ export async function distillWithModel(
     }
   }
 
+  // 5) GUARANTEE the deliverable count in "now". The state line must not
+  // undercount the files the chat produced (for a multi-file build the file
+  // count IS the state). If "now" does not already name every produced file, we
+  // append a factual list, deterministically, so a reader never thinks a missing
+  // file has yet to be made.
+  const produced = finalSections.filesToAttach
+    .filter((f) => f.source === "chat")
+    .map((f) => f.name);
+  if (produced.length >= 2) {
+    const nowLc = finalSections.now.toLowerCase();
+    const allNamed = produced.every((n) => nowLc.includes(n.toLowerCase()));
+    if (!allNamed) {
+      const prefix = finalSections.now.trim() ? finalSections.now.trim() + " " : "";
+      finalSections.now = `${prefix}Files produced in this chat (${produced.length}): ${produced.join(", ")}.`;
+    }
+  }
+
   return {
     brief: {
       now: finalSections.now,

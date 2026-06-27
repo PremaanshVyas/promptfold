@@ -219,6 +219,38 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(formulas.every((f) => f.kind === "constraint")).toBe(true); // not api
   });
 
+  it("captures cell-targeted formulas whole, including a 3-term sum (B12=B5+B6+B7)", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "sheet",
+      chat_messages: [
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [{ type: "text", text: "Cells: B11=B5/B6, C11=C5/C6, and total B12=B5+B6+B7." }],
+        },
+      ],
+    };
+    const brief = distillDeterministic(normalizeConversation(convo, { capturedAt: AT }));
+    const vals = brief.verbatim.filter((v) => v.kind === "constraint").map((v) => v.value);
+    expect(vals).toContain("B11=B5/B6");
+    expect(vals).toContain("C11=C5/C6");
+    expect(vals).toContain("B12=B5+B6+B7"); // the total-electrolytes row is not dropped
+  });
+
+  it("does not list a web URL (nutritionvalue.org/x.html) as an attachable file", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "research",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "I looked at nutritionvalue.org/foods/electrolytes.html earlier" }] },
+        { uuid: "a", sender: "assistant", content: [{ type: "text", text: "ok" }] },
+      ],
+    };
+    const brief = distillDeterministic(normalizeConversation(convo, { capturedAt: AT }));
+    expect(brief.filesToAttach.some((f) => f.name.includes("nutritionvalue"))).toBe(false);
+  });
+
   it("never states a fabricated char/byte count for a presented file", () => {
     const convo: ClaudeConversation = {
       uuid: "c",

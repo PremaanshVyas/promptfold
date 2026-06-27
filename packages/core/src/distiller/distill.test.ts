@@ -113,6 +113,38 @@ describe("distillWithModel", () => {
     expect(brief.meta.rawFallbacks.join(" ")).toContain("deterministic");
   });
 
+  it("guarantees every produced file is accounted for in 'now' (no undercount)", async () => {
+    const msgs = [
+      { uuid: "u", sender: "human", content: [{ type: "text", text: "make all six files" }] },
+      {
+        uuid: "a",
+        parent_message_uuid: "u",
+        sender: "assistant",
+        content: [
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/report.docx", file_text: "" } },
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/factsheet.pdf", file_text: "" } },
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/data.xlsx", file_text: "" } },
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/notes.md", file_text: "# notes" } },
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/summary.csv", file_text: "a,b" } },
+          { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/meta.json", file_text: "{}" } },
+        ],
+      },
+    ];
+    const t = normalizeConversation({ uuid: "c", name: "build", current_leaf_message_uuid: "a", chat_messages: msgs }, { capturedAt: AT });
+    // The model undercounts: it only mentions two files in "now".
+    const client = fakeClient({
+      chunkOut: () => JSON.stringify({
+        now: "Produced two data artifacts, a CSV and a JSON file.",
+        decided: [], open: [], rejected: [], verbatim: [], filesToAttach: [],
+      }),
+    });
+    const { brief } = await distillWithModel(t, client);
+    // The safety net appends the real produced-file list so nothing reads as missing.
+    for (const name of ["report.docx", "factsheet.pdf", "data.xlsx", "notes.md", "summary.csv", "meta.json"]) {
+      expect(brief.now).toContain(name);
+    }
+  });
+
   it("does not add a duplicate table when the model already captured an equivalent one", async () => {
     const table =
       "| Brand | Sodium | Potassium |\n| --- | --- | --- |\n| Liquid IV | 500mg | 380mg |\n| LMNT | 1000mg | 200mg |";
