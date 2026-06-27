@@ -97,7 +97,7 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(tableItem?.value).toContain("1000mg");
   });
 
-  it("captures a markdown image shown in the chat as a verbatim image", () => {
+  it("captures an image by SUBJECT, never the URL, and never as a gallery", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
       name: "liquid iv",
@@ -112,12 +112,13 @@ describe("distillDeterministic (Tier 0)", () => {
     };
     const t = normalizeConversation(convo, { capturedAt: AT });
     const brief = distillDeterministic(t);
-    const img = brief.verbatim.find((v) => v.kind === "image");
-    expect(img?.value).toBe("https://img.example/liquid-iv.png");
-    expect(img?.label).toBe("Liquid IV hydration packet");
+    const images = brief.verbatim.filter((v) => v.kind === "image");
+    expect(images).toHaveLength(1);
+    expect(images[0]?.value).toBe("Liquid IV hydration packet"); // subject, not URL
+    expect(images[0]?.value).not.toMatch(/https?:\/\//); // URL is discarded
   });
 
-  it("captures a Claude image content block (not just markdown)", () => {
+  it("captures a Claude image content block by description, not URL", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
       name: "img block",
@@ -134,9 +135,29 @@ describe("distillDeterministic (Tier 0)", () => {
     };
     const t = normalizeConversation(convo, { capturedAt: AT });
     const brief = distillDeterministic(t);
-    expect(brief.verbatim.find((v) => v.kind === "image")?.value).toBe("https://img.example/p.jpg");
-    // The image block must NOT be flagged as an unclassified/unknown block.
+    const img = brief.verbatim.find((v) => v.kind === "image");
+    expect(img?.value).toBe("product shot");
+    expect(img?.value).not.toMatch(/https?:\/\//);
     expect(t.integrity.unknown).toEqual([]);
+  });
+
+  it("keeps spreadsheet formulas as separate constraint items, never merged or typed api", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "ratios",
+      chat_messages: [
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [{ type: "text", text: "Sodium ratio uses =B2/B3 and potassium uses =C2/C3 in the sheet." }],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    const formulas = brief.verbatim.filter((v) => v.value === "=B2/B3" || v.value === "=C2/C3");
+    expect(formulas).toHaveLength(2); // two separate items
+    expect(formulas.every((f) => f.kind === "constraint")).toBe(true); // not api
   });
 
   it("never states a fabricated char/byte count for a presented file", () => {

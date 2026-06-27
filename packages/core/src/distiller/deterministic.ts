@@ -137,14 +137,19 @@ function fromTables(
   return items;
 }
 
-// Markdown image: ![alt](url). url may be http(s), data:, or a sandbox path.
-const IMAGE_RE = /!\[([^\]]*)\]\(\s*(\S+?)\s*\)/g;
+// Markdown image (![alt](url)) and our capture-time note ([image shown: ...]).
+const IMAGE_MD_RE = /!\[([^\]]*)\]\(\s*\S+?\s*\)/g;
+const IMAGE_NOTE_RE = /\[image[^\]\n]{0,160}\]/gi;
+// Spreadsheet / cell formula: =B2/B3, =SUM(A1:A3)*C2, etc. NOT an API endpoint.
+const FORMULA_RE = /=\s*[A-Z]{1,3}\$?\d{1,4}\s*(?:[-+*/]\s*\$?[A-Z]{1,3}\$?\d{1,4}\s*)+/g;
+const MAX_IMAGES = 8;
 
 /**
- * Images shown in the chat are a content type in their own right (a product
- * photo, a generated chart, a screenshot). Capture each as a verbatim "image"
- * item so a content-complete handoff never silently drops one. Platform-agnostic:
- * every chatbot renders images as markdown in the message text.
+ * Record that an image was SHOWN, by its subject, not its URL. A handoff needs
+ * "a Liquid IV product photo was shown (image search)", a durable fact, NOT the
+ * hotlinked retailer CDN URL, which rots within weeks and is not state the next
+ * session must preserve. So we capture the description and deliberately discard
+ * the URL, and we never embed/render it. One line per distinct subject.
  */
 function fromImages(
   transcript: NormalizedTranscript,
@@ -152,22 +157,40 @@ function fromImages(
 ): VerbatimItem[] {
   const items: VerbatimItem[] = [];
   const seen = new Set<string>();
+  const push = (subject: string): void => {
+    const v = subject.trim() || "image";
+    const key = v.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push({ kind: "image", label: "image shown", value: v });
+  };
   const sources = [
     ...transcript.messages.map((m) => m.text),
     ...artifacts.map((a) => a.content),
   ];
   for (const text of sources) {
-    IMAGE_RE.lastIndex = 0;
+    IMAGE_MD_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
-    while ((m = IMAGE_RE.exec(text)) !== null) {
-      const alt = (m[1] ?? "").trim();
-      const url = (m[2] ?? "").trim();
-      if (!url || seen.has(url)) continue;
-      seen.add(url);
-      items.push({ kind: "image", label: alt || "image", value: url });
+    while ((m = IMAGE_MD_RE.exec(text)) !== null) push((m[1] ?? "").trim()); // alt only, URL dropped
+    for (const note of text.matchAll(IMAGE_NOTE_RE)) {
+      const inner = note[0]
+        .replace(/^\[|\]$/g, "")
+        .replace(/^image(?:\s+shown(?:\s+in\s+chat)?)?\s*:?\s*/i, "")
+        .trim();
+      push(inner);
     }
   }
-  return items;
+  return items.slice(0, MAX_IMAGES);
+}
+
+/** Spreadsheet/cell formulas → one verbatim "constraint" each, kept separate. */
+function fromFormulas(transcript: NormalizedTranscript): VerbatimItem[] {
+  const items: VerbatimItem[] = [];
+  const all = transcript.messages.map((m) => m.text).join("\n");
+  for (const m of all.matchAll(FORMULA_RE)) {
+    items.push({ kind: "constraint", label: "formula", value: m[0].replace(/\s+/g, "") });
+  }
+  return dedupe(items, (i) => i.value);
 }
 
 /** Inline fenced code blocks in message text → verbatim code (deduped). */
@@ -272,6 +295,7 @@ export function distillDeterministic(
     [
       ...fromTables(transcript, artifacts),
       ...fromImages(transcript, artifacts),
+      ...fromFormulas(transcript),
       ...fromArt.verbatim,
       ...fromFencedCode(transcript),
       ...fromApiMentions(transcript),

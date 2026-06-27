@@ -36,6 +36,27 @@ function toRole(sender: string | undefined): Role {
 }
 
 /**
+ * One concise subject for a set of image labels: the shared leading words
+ * ("Liquid IV Tropical", "Liquid IV Lemon Lime" -> "Liquid IV"), so a
+ * multi-thumbnail search collapses to its actual subject rather than a gallery.
+ * Falls back to the first meaningful label.
+ */
+function commonSubject(labels: string[]): string {
+  const clean = labels.map((l) => l.trim()).filter((l) => l && l.toLowerCase() !== "image");
+  if (clean.length === 0) return "image";
+  if (clean.length === 1) return clean[0]!;
+  const wordLists = clean.map((l) => l.split(/\s+/));
+  const first = wordLists[0]!;
+  let i = 0;
+  for (; i < first.length; i++) {
+    const w = first[i]!.toLowerCase();
+    if (!wordLists.every((ws) => (ws[i] ?? "").toLowerCase() === w)) break;
+  }
+  const prefix = first.slice(0, i).join(" ").trim();
+  return prefix.length >= 2 ? prefix : clean[0]!;
+}
+
+/**
  * Reconstruct the active conversation path.
  *
  * If `current_leaf_message_uuid` and parent pointers are present, walk from the
@@ -157,10 +178,12 @@ function normalizeMessage(
     text = remainingText;
   }
 
-  // Append any image found in search results as markdown (so the distiller's
-  // image extractor captures it) and a Sources block (same shape as the other
-  // platforms) so the subject of a shown image and the cited sources persist.
-  for (const im of searchImages) text += `\n\n![${im.alt}](${im.url})`;
+  // Note that an image was shown by its SUBJECT, collapsed to ONE line for this
+  // turn, never the rot-prone retailer URLs and never an embedded gallery.
+  // Sources (non-image citations) keep their title+url, the established pattern.
+  if (searchImages.length > 0) {
+    text += `\n\n[image shown: ${commonSubject(searchImages.map((im) => im.alt))} (image search)]`;
+  }
   if (sources.size > 0) {
     const lines = [...sources].map(([url, title]) => `- ${title}: ${url}`);
     text += `\n\nSources:\n${lines.join("\n")}`;

@@ -50,6 +50,11 @@ const SHARED_RULES = `Rules you follow without exception:
 - KEEP EXACT, byte-for-byte: final code, real names, file paths, numbers, API
   contracts, and the precise wording of any constraint. Put these in "verbatim".
   Never paraphrase, reformat, or round a verbatim value.
+- ONE VALUE PER VERBATIM ITEM, CORRECTLY TYPED. Never merge two distinct values
+  onto one line (two spreadsheet formulas =B2/B3 and =C2/C3 are TWO items, not
+  "=B2/B3, =C2/C3"). Type by what it is: a cell/spreadsheet formula is "code" or
+  "constraint", NEVER "api" (kind "api" is only for URLs and REST endpoints like
+  GET /v1/users).
 - TABLES AND STRUCTURED CONTENT ARE LOAD-BEARING. If the conversation contains a
   TABLE (a comparison, a spec sheet, a dataset, a pricing/options grid), keep it
   WHOLE in "verbatim" with kind "table", reproduced as a markdown table exactly,
@@ -57,12 +62,14 @@ const SHARED_RULES = `Rules you follow without exception:
   goes for boxed/callout content, step lists, and any structured data the chat
   produced: capture it exactly, do not flatten it. Tables are usually the answer,
   not decoration.
-- IMAGES ARE CONTENT, NOT DECORATION. If the chat displayed or generated an image
-  (a photo, a chart, a diagram, a screenshot, an image-search result), record it
-  in "verbatim" with kind "image": "value" is the image URL if one is present,
-  otherwise a short factual description of what the image showed; "label" is its
-  caption/alt text. Never silently drop an image, its absence makes the handoff
-  incomplete.
+- IMAGES: DESCRIBE, DON'T EMBED. If the chat showed or generated an image,
+  record ONE concise line per image event in "verbatim" with kind "image":
+  "value" is the SUBJECT ("Liquid IV product photo", "revenue bar chart"), plus
+  the source if known ("image search"). NEVER put an image URL in the value,
+  hotlinked image URLs rot and are not state to preserve; capture the subject,
+  discard the URL. Do NOT mark images kind "constraint" (they bind nothing) and
+  do NOT manufacture a gallery: if one search showed several thumbnails of the
+  same thing, that is ONE image line, not one per thumbnail.
 - CRUSH TO NOTHING: apologies, filler, dead ends, retries, tool mechanics, and
   "try this / no that failed" loops. Maximize recall first, then cut noise.
 - LATEST STATE WINS. If a value changed over the chat (e.g. a timeout 30 then

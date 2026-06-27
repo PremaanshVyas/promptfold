@@ -167,9 +167,13 @@ describe("search-result mining (web_search / image subjects / citations)", () =>
     };
     const t = normalizeConversation(convo, { capturedAt: AT });
     const assistant = t.messages.find((m) => m.role === "assistant");
+    // Non-image web result -> Sources (title + url kept).
     expect(assistant?.text).toContain("Sources:");
     expect(assistant?.text).toContain("Liquid IV Tropical stick packs");
-    expect(assistant?.text).toContain("![Liquid IV product shot](https://img.example/liquid-iv.jpg)");
+    // Image result -> a single subject note, NOT an embedded image, NOT a URL.
+    expect(assistant?.text).toContain("[image shown:");
+    expect(assistant?.text).not.toContain("![");
+    expect(assistant?.text).not.toContain("img.example/liquid-iv.jpg");
     // The result block must NOT be flagged as an unclassified/unknown block.
     expect(t.integrity.unknown).toEqual([]);
   });
