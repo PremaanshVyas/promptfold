@@ -63,9 +63,7 @@ only to the provider you chose with your key.
   structured handoff brief they can carry to another chat or teammate.
 - **Permission justifications:**
   - `storage`: store the user's settings, their API key, and a local
-    per-conversation brief cache.
-  - `activeTab` + `scripting`: inject the Fold UI and read the conversation on
-    the tab the user is viewing, only when they click Fold.
+    per-conversation brief cache, all on the user's own machine.
   - `host_permissions` (claude.ai, chatgpt.com / chat.openai.com,
     gemini.google.com, *.perplexity.ai, grok.com, chat.deepseek.com,
     huggingface.co): fetch the user's own conversation from each platform's API

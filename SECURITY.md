@@ -11,8 +11,7 @@ this is a public repository, so nothing sensitive must ever land in it.
   injected into the page, and never sent to any PromptFold server, there is none.
 - **No middleman.** There is no PromptFold backend. Capture happens in your
   browser; distillation is a direct call from the extension to your provider.
-- **Least privilege.** Standard `permissions` are exactly `storage`, `activeTab`,
-  `scripting`. `host_permissions` are scoped to the seven supported chat hosts
+- **Least privilege.** The only standard `permission` is `storage`. `host_permissions` are scoped to the seven supported chat hosts
   (claude.ai, chatgpt.com / chat.openai.com, gemini.google.com, *.perplexity.ai,
   grok.com, chat.deepseek.com, huggingface.co) plus the two LLM API hosts
   (api.anthropic.com, api.openai.com). There is **no** `<all_urls>` and **no**

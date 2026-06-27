@@ -188,8 +188,7 @@ Short version:
   extension never loads or evals external script.
 - **Secrets cannot enter git.** A `.gitignore` written before any code, plus a
   secret-scan pre-commit hook and the same scan in CI.
-- **Least privilege.** Standard permissions are `storage`, `activeTab`,
-  `scripting`. Host permissions cover only the seven supported chat hosts and the
+- **Least privilege.** The only standard permission is `storage`. Host permissions cover only the seven supported chat hosts and the
   two LLM API hosts. No `<all_urls>`, no broad optional permissions. See
   SECURITY.md for the exact set.
 
