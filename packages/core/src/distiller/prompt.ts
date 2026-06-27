@@ -58,6 +58,20 @@ const SHARED_RULES = `Rules you follow without exception:
   is not given, omit it, a fabricated "5,000 chars" is a lie with false
   precision. Describe files qualitatively ("the full script", "the spreadsheet")
   instead.
+- DECIDED vs OPEN IS ABOUT CERTAINTY, PRESERVE IT. "decided" = settled, the
+  conversation committed to it. "open" = a real unresolved question OR an
+  acknowledged-but-unsettled caveat. Keep an open caveat OPEN, never fold it into
+  "decided" to look tidy. Signals it is still open: "some sources say", "might
+  be", "need to verify/check", "unclear", or a stated ALTERNATIVE value that was
+  noticed but not chosen (e.g. "labels list 510/390 instead of 500/370"). The
+  chosen value is decided; the residual doubt about whether it is exact stays
+  open. NEVER paraphrase a specific alternative value (510/390) into a general
+  disclaimer ("treat as approximate"), keep the exact competing figures. An open
+  item with a concrete value attached must survive verbatim, not be compressed.
+- CAPTURE INTENT WHEN STATED. If the conversation says WHY the user is doing this
+  (the purpose, the audience, that it is personal vs a side project / test),
+  record it in one short clause in "now". Only when explicitly stated, never
+  invent a motive.
 - NO FABRICATED RATIONALE. For every "rejected" item, "why" must be the reason
   actually stated or unmistakably implied. If an idea was dropped but NO reason
   is given, write "reason not stated", a wrong invented reason is worse than
@@ -160,7 +174,11 @@ Merge rules:
 - SUPERSESSION ACROSS SECTIONS, track each thread's FINAL status:
   • a "decided" item later contradicted or abandoned → move it to "rejected" with
     the reason it was dropped;
-  • an "open" item later answered → move it to "decided" and remove from "open";
+  • an "open" item later EXPLICITLY answered → move it to "decided" and remove
+    from "open". Only when the conversation actually resolved it, an acknowledged
+    but still-uncertain caveat (e.g. "some labels say 510/390") stays OPEN; do
+    NOT promote lingering uncertainty into "decided" to tidy the brief, and do
+    not drop its specific values;
   • a "rejected" idea later revived and adopted → move it to "decided".
   Decide membership by the LATEST mini-brief that mentions the thread.
 - DE-DUPLICATE. The same decision, file, or value mentioned in several chunks
