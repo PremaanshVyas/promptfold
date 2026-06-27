@@ -176,14 +176,20 @@ export function reconstructFiles(toolBlocks: ClaudeContentBlock[]): ReconstructR
     }
   }
 
-  // Choose the deliverable set.
+  // Choose the deliverable set. A file is a deliverable if it was explicitly
+  // presented OR written to the canonical outputs dir. We UNION the two rather
+  // than preferring presented exclusively: when present_files names only a
+  // subset of the files the chat produced, the rest are still real deliverables.
+  // Taking only the presented subset used to push those leftover output files
+  // into the "referenced" bucket (mentioned-but-not-attached), silently
+  // under-attaching real files across the handoff.
   const presentedSet = new Set(eng.presented.map((p) => resolvePath("/", p)));
+  const outputsFiles = [...eng.files.keys()].filter((p) => p.startsWith(OUTPUTS_DIR));
   let paths: string[];
-  if (presentedSet.size > 0) {
-    paths = [...presentedSet];
+  if (presentedSet.size > 0 || outputsFiles.length > 0) {
+    paths = [...new Set([...presentedSet, ...outputsFiles])];
   } else {
-    paths = [...eng.files.keys()].filter((p) => p.startsWith(OUTPUTS_DIR));
-    if (paths.length === 0) paths = [...eng.files.keys()]; // nothing formally delivered
+    paths = [...eng.files.keys()]; // nothing formally delivered, fall back to all
   }
 
   const lastWritten = eng.order[eng.order.length - 1];

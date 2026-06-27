@@ -41,6 +41,33 @@ describe("reconstructFiles", () => {
     expect(deliverables.map((d) => d.name)).toEqual(["result.csv"]);
   });
 
+  it("keeps an outputs-dir file as a deliverable even if present_files names only a subset", () => {
+    // The chat produced six files in outputs but present_files listed only three.
+    // The other three must NOT be dropped (or downgraded to 'referenced' later);
+    // they were genuinely produced in the chat.
+    const { deliverables } = reconstructFiles([
+      tool("create_file", { path: "/mnt/user-data/outputs/a.pdf", file_text: "" }),
+      tool("create_file", { path: "/mnt/user-data/outputs/b.json", file_text: "{}" }),
+      tool("create_file", { path: "/mnt/user-data/outputs/c.xlsx", file_text: "" }),
+      tool("create_file", { path: "/mnt/user-data/outputs/d.docx", file_text: "" }),
+      tool("create_file", { path: "/mnt/user-data/outputs/e.md", file_text: "# notes" }),
+      tool("create_file", { path: "/mnt/user-data/outputs/f.csv", file_text: "x,y" }),
+      tool("present_files", { filepaths: [
+        "/mnt/user-data/outputs/a.pdf",
+        "/mnt/user-data/outputs/b.json",
+        "/mnt/user-data/outputs/c.xlsx",
+      ] }),
+    ]);
+    const names = deliverables.map((d) => d.name).sort();
+    expect(names).toEqual(["a.pdf", "b.json", "c.xlsx", "d.docx", "e.md", "f.csv"]);
+    // All six are produced in the chat, regardless of the present_files manifest.
+    expect(deliverables).toHaveLength(6);
+    // The three named in present_files are flagged presented; the rest are not,
+    // but all are deliverables (the distiller tags every deliverable source:chat).
+    const presented = deliverables.filter((d) => d.presented).map((d) => d.name).sort();
+    expect(presented).toEqual(["a.pdf", "b.json", "c.xlsx"]);
+  });
+
   it("marks binary deliverables and never inlines their content", () => {
     const { deliverables } = reconstructFiles([
       tool("bash_tool", { command: "python3 make_report.py" }),

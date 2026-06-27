@@ -62,16 +62,18 @@ function fromArtifacts(artifacts: Artifact[]): {
           ? "final deliverable presented in the chat (binary file), attach it"
           : "binary file produced in the chat, attach it",
       });
-    } else if (a.presented || a.content.length > BIG_CODE_CHARS) {
-      // Describe size qualitatively only. We never read the real file off disk,
-      // so we must not state a byte/char count, an invented precise size erodes
-      // trust faster than no number at all.
+    } else if (a.presented || a.content.length > BIG_CODE_CHARS || a.messageUuid === "reconstructed") {
+      // A reconstructed file is a real produced deliverable, attach it whatever
+      // its size, so files created in the same chat are classified consistently
+      // (never some inline and some attached). Describe size qualitatively only:
+      // we never read the real file off disk, so an invented byte/char count
+      // would erode trust faster than no number at all.
       files.push({
         name: a.filename ?? `${a.title ?? "artifact-" + a.id}`,
         source: "chat",
         why: a.presented
           ? "final deliverable presented to the user, attach this file"
-          : "produced in full in the chat, attach the file rather than re-paste it inline",
+          : "produced in the chat, attach the file so the next reader has the original",
       });
     } else {
       verbatim.push({
