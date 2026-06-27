@@ -24,7 +24,10 @@ import {
   openNeedsKeyDrawer,
   type DrawerHandle,
 } from "./drawer.js";
-import { loadCachedBrief, saveCachedBrief } from "../shared/cache.js";
+import { loadCachedBrief, saveCachedBrief, extensionAlive } from "../shared/cache.js";
+
+const STALE_CONTEXT_MSG =
+  "PromptFold was just updated or reloaded. Please refresh this page (Cmd+R / Ctrl+R), then click Fold again.";
 import { runCapture, type CaptureSource } from "./capture.js";
 
 const HOST_ID = "promptfold-host";
@@ -56,7 +59,13 @@ function distillViaPort(
 ): Promise<DistillResponse | NeedsKeyResponse | ErrorResponse> {
   return new Promise((resolve) => {
     let settled = false;
-    const port = chrome.runtime.connect({ name: "promptfold" });
+    let port: chrome.runtime.Port;
+    try {
+      port = chrome.runtime.connect({ name: "promptfold" });
+    } catch {
+      resolve({ type: "error", message: STALE_CONTEXT_MSG });
+      return;
+    }
     port.onMessage.addListener((msg: WorkerResponse) => {
       if (msg.type === "progress") {
         onProgress(msg);
@@ -80,10 +89,18 @@ function openSettings() {
   // A content script cannot open a chrome-extension:// URL itself (the page
   // context is blocked from navigating to extension URLs). Ask the worker, which
   // has the privilege, to open the options page.
+  if (!extensionAlive()) {
+    alert("PromptFold: " + STALE_CONTEXT_MSG);
+    return;
+  }
   chrome.runtime.sendMessage({ type: "openOptions" });
 }
 
 async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
+  if (!extensionAlive()) {
+    alert("PromptFold: " + STALE_CONTEXT_MSG);
+    return;
+  }
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "Reading conversation…";
@@ -142,6 +159,12 @@ async function generate(shadow: ShadowRoot, button: HTMLButtonElement) {
 }
 
 async function onCarryClick(shadow: ShadowRoot, button: HTMLButtonElement) {
+  // After an extension reload, this stale content script's chrome.* is dead.
+  // Tell the user to refresh rather than throwing "context invalidated".
+  if (!extensionAlive()) {
+    alert("PromptFold: " + STALE_CONTEXT_MSG);
+    return;
+  }
   openHandle?.destroy();
 
   // Show the saved brief instantly if we have one; let the user Regenerate.
@@ -166,7 +189,15 @@ function injectButton(shadow: ShadowRoot) {
   button.className = "cb-fab";
   button.textContent = "Fold ↗";
   button.title = "Turn this chat into a handoff brief";
-  button.addEventListener("click", () => void onCarryClick(shadow, button));
+  button.addEventListener("click", () => {
+    onCarryClick(shadow, button).catch((e: unknown) => {
+      const msg = e instanceof Error && /context invalidated/i.test(e.message)
+        ? STALE_CONTEXT_MSG
+        : (e as Error)?.message ?? String(e);
+      alert("PromptFold: " + msg);
+      button.disabled = false;
+    });
+  });
   shadow.appendChild(button);
 }
 

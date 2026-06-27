@@ -21,17 +21,42 @@ export interface CachedBrief {
 
 const PREFIX = "promptfold.brief.";
 
+/**
+ * True while this content script's extension context is still valid. After the
+ * extension is reloaded/updated, already-open tabs keep the OLD content script,
+ * whose chrome.* handles are dead; touching them throws "Extension context
+ * invalidated". `chrome.runtime.id` goes undefined exactly then, so we check it
+ * before any chrome.* call and degrade gracefully instead of crashing.
+ */
+export function extensionAlive(): boolean {
+  try {
+    return Boolean(chrome.runtime?.id);
+  } catch {
+    return false;
+  }
+}
+
 export async function loadCachedBrief(
   conversationId: string,
 ): Promise<CachedBrief | null> {
-  const key = PREFIX + conversationId;
-  const got = await chrome.storage.local.get(key);
-  return (got[key] as CachedBrief | undefined) ?? null;
+  if (!extensionAlive()) return null;
+  try {
+    const key = PREFIX + conversationId;
+    const got = await chrome.storage.local.get(key);
+    return (got[key] as CachedBrief | undefined) ?? null;
+  } catch {
+    return null; // context invalidated mid-call; treat as no cache
+  }
 }
 
 export async function saveCachedBrief(
   conversationId: string,
   brief: CachedBrief,
 ): Promise<void> {
-  await chrome.storage.local.set({ [PREFIX + conversationId]: brief });
+  if (!extensionAlive()) return;
+  try {
+    await chrome.storage.local.set({ [PREFIX + conversationId]: brief });
+  } catch {
+    /* context invalidated; the brief is still shown, just not cached */
+  }
 }
