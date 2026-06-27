@@ -212,17 +212,25 @@ const hfAdapter: CaptureAdapter = {
   },
 };
 
-// ── Gemini: batchexecute RPC adapter (experimental, instrumented) ───────────
+// ── Gemini: batchexecute RPC adapter (experimental) ─────────────────────────
 const PF = "[PromptFold Gemini]";
+// Off by default: when on, traces capture INCLUDING response bodies (chat
+// content). Keep OFF in shipped builds so we never print conversations to the
+// console. Flip to true only for local debugging of the Gemini RPC shape.
+const DEBUG = false;
+const trace = (...args: unknown[]): void => {
+  if (DEBUG) console.log(PF, ...args);
+};
 
-/** A fetch that logs status + a body snippet so failures are diagnosable. */
 const postFetch: PostFetch = async (url, init) => {
   const res = await fetch(url, init as RequestInit);
-  try {
-    const snippet = (await res.clone().text()).slice(0, 700);
-    console.log(PF, "POST status", res.status, "url", url.slice(0, 110), "\nbody:", snippet);
-  } catch {
-    /* logging only */
+  if (DEBUG) {
+    try {
+      const snippet = (await res.clone().text()).slice(0, 700);
+      trace("POST status", res.status, "url", url.slice(0, 110), "\nbody:", snippet);
+    } catch {
+      /* logging only */
+    }
   }
   return res as unknown as Awaited<ReturnType<PostFetch>>;
 };
@@ -244,22 +252,22 @@ async function geminiTokens(): Promise<GeminiTokens | null> {
     try {
       html = await (await fetch(location.href, { credentials: "include" })).text();
     } catch (e) {
-      console.warn(PF, "fetch(location.href) failed", e);
+      trace("fetch(location.href) failed", e);
     }
     if (!/"SNlM0e"/.test(html)) {
-      console.warn(PF, "SNlM0e not in fetched HTML, trying live DOM");
+      trace("SNlM0e not in fetched HTML, trying live DOM");
       html = document.documentElement.innerHTML;
     }
     at = pick(html, "SNlM0e") ?? "";
   }
   if (!at) {
-    console.warn(PF, "SNlM0e token NOT found (input[name=at] or HTML)");
+    trace("SNlM0e token NOT found (input[name=at] or HTML)");
     return null;
   }
   const tokens: GeminiTokens = { at };
   const hl = pick(html || document.documentElement.innerHTML, "TuX5cc");
   if (hl) tokens.hl = hl;
-  console.log(PF, "token found — at:", at.length, "chars, hl:", hl, "(via", at && document.querySelector('input[name="at"]') ? "input" : "html", ")");
+  trace("token found — at:", at.length, "chars, hl:", hl);
   return tokens;
 }
 
@@ -269,21 +277,17 @@ const geminiAdapter: CaptureAdapter = {
   matches: (h) => h === "gemini.google.com",
   async capture(capturedAt) {
     const cid = geminiConversationIdFromUrl(location.href);
-    console.log(PF, "url:", location.href, "→ cid:", cid);
+    trace("cid:", cid);
     if (!cid) throw new Error("Open a saved Gemini conversation first, then click Fold.");
     const tokens = await geminiTokens();
     if (!tokens) throw new Error("Could not read Gemini session tokens from the page.");
-    try {
-      return await captureGeminiConversation(cid, {
-        post: postFetch,
-        tokens,
-        capturedAt,
-        reqid: 100000 + Math.floor(Math.random() * 900000),
-      });
-    } catch (e) {
-      console.warn(PF, "capture failed:", (e as Error).message);
-      throw e;
-    }
+    // The error is surfaced in the drawer UI; rethrow without logging chat context.
+    return await captureGeminiConversation(cid, {
+      post: postFetch,
+      tokens,
+      capturedAt,
+      reqid: 100000 + Math.floor(Math.random() * 900000),
+    });
   },
 };
 
