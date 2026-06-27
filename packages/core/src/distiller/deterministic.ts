@@ -215,12 +215,12 @@ function fromApiMentions(transcript: NormalizedTranscript): VerbatimItem[] {
   return dedupe(items, (i) => i.value);
 }
 
-/** A web URL/host like nutritionvalue.org/x.html, NOT a file the user made. */
+/** A web URL/host like www.nutritionvalue.org/x.html, NOT a file the user made. */
 function looksLikeUrl(name: string): boolean {
-  const firstSeg = name.split("/")[0] ?? "";
-  // A domain host (label.tld) before the first slash. Real paths ("services/
-  // auth.py", "./config.yaml") have no dotted host segment there.
-  return name.includes("/") && /^[a-z0-9-]+\.[a-z]{2,}$/i.test(firstSeg);
+  const firstSeg = (name.split("/")[0] ?? "").replace(/^https?:\/\//i, "");
+  // A multi-label domain host (label(.label)*.tld) before the first slash. Real
+  // paths ("services/auth.py", "./config.yaml") have no dotted host there.
+  return name.includes("/") && /^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(firstSeg);
 }
 
 /**

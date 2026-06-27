@@ -160,6 +160,20 @@ export async function distillWithModel(
     ...finalSections.filesToAttach,
   ]);
 
+  // 3b) Strip self-referential meta-commentary. When this brief (or feedback
+  // about it) is pasted INTO a chat that is later summarized, the model captures
+  // remarks about the tool as if they were conversational state. The prompt asks
+  // it not to, but that is unreliable, so we deterministically drop items that
+  // are clearly about the brief/tool rather than the work.
+  const META_RE =
+    /\bhandoff tool\b|\bsummary tool\b|\bin (the )?handoff\b|\b(now|verbatim|rejected|decided|open)\s+section\b|\battach(ment)? list\b|\bundercount(s|ed|ing)?\b|\bextractor\b|\bdistiller\b|\bthe handoff\b/i;
+  const isMeta = (s: string): boolean => META_RE.test(s);
+  finalSections.decided = finalSections.decided.filter((d) => !isMeta(d.text));
+  finalSections.open = finalSections.open.filter((o) => !isMeta(o.text));
+  finalSections.rejected = finalSections.rejected.filter(
+    (r) => !isMeta(r.idea) && !isMeta(r.why),
+  );
+
   // 4) GUARANTEE structured content: the model often summarizes a table into
   // prose or drops an image. Every table and image deterministically found in
   // the chat is force-added to verbatim, regardless of what the model returned.

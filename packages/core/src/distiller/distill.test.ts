@@ -145,6 +145,39 @@ describe("distillWithModel", () => {
     }
   });
 
+  it("strips self-referential meta-commentary about the tool from decided/open/rejected", async () => {
+    const t = normalizeConversation(
+      { uuid: "c", name: "x", chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "review the handoff" }] },
+        { uuid: "a", sender: "assistant", content: [{ type: "text", text: "ok" }] },
+      ] },
+      { capturedAt: AT },
+    );
+    // The model captured pasted tool-feedback as if it were conversation state.
+    const client = fakeClient({
+      chunkOut: () => JSON.stringify({
+        decided: [
+          { text: "Liquid IV sodium is 500mg" },
+          { text: "handoff tool's Now section undercounts deliverables" },
+        ],
+        open: [
+          { text: "how to import the CSV into the side project" },
+          { text: "extractor should distinguish files from URLs" },
+        ],
+        rejected: [
+          { idea: "using nutritionvalue.org URL as an attachable file in handoff", why: "URLs are not files" },
+          { idea: "timeout of 30s", why: "too short" },
+        ],
+        verbatim: [], filesToAttach: [],
+      }),
+    });
+    const { brief } = await distillWithModel(t, client);
+    // Real work survives; commentary about the tool is gone.
+    expect(brief.decided.map((d) => d.text)).toEqual(["Liquid IV sodium is 500mg"]);
+    expect(brief.open.map((o) => o.text)).toEqual(["how to import the CSV into the side project"]);
+    expect(brief.rejected.map((r) => r.idea)).toEqual(["timeout of 30s"]);
+  });
+
   it("does not add a duplicate table when the model already captured an equivalent one", async () => {
     const table =
       "| Brand | Sodium | Potassium |\n| --- | --- | --- |\n| Liquid IV | 500mg | 380mg |\n| LMNT | 1000mg | 200mg |";

@@ -238,12 +238,13 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(vals).toContain("B12=B5+B6+B7"); // the total-electrolytes row is not dropped
   });
 
-  it("does not list a web URL (nutritionvalue.org/x.html) as an attachable file", () => {
+  it("does not list a web URL (incl. multi-label www. host) as an attachable file", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
       name: "research",
       chat_messages: [
-        { uuid: "u", sender: "human", content: [{ type: "text", text: "I looked at nutritionvalue.org/foods/electrolytes.html earlier" }] },
+        { uuid: "u", sender: "human", content: [{ type: "text", text:
+          "I looked at www.nutritionvalue.org/Hydration_multiplier_drink_536090_nutritional_value.html earlier, and also nutritionvalue.org/foods/x.html" }] },
         { uuid: "a", sender: "assistant", content: [{ type: "text", text: "ok" }] },
       ],
     };
