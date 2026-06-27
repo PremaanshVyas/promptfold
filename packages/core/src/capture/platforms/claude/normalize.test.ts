@@ -4,11 +4,13 @@ import {
   activeBranch,
   transcriptFromMessages,
 } from "./normalize.js";
+import { extractSearchContext, extractCitations } from "./artifact-parser.js";
 import {
   mixedArtifactsConvo,
   flatTextConvo,
   sandboxWritingConvo,
 } from "./__fixtures__/conversations.js";
+import type { ClaudeConversation } from "../../../types.js";
 
 const AT = "2026-06-26T12:00:00Z";
 
@@ -110,5 +112,65 @@ describe("normalizeConversation, flat/legacy shape", () => {
     expect(t.messages).toHaveLength(2);
     expect(t.integrity.complete).toBe(true);
     expect(t.title).toBe("Quick chat");
+  });
+});
+
+describe("search-result mining (web_search / image subjects / citations)", () => {
+  it("extractSearchContext pulls source titles and image urls out of a result block", () => {
+    const block = {
+      type: "web_search_tool_result",
+      content: [
+        { type: "web_search_result", title: "Liquid IV Tropical stick packs", url: "https://store.example/tropical", page_age: "2025" },
+        { type: "web_search_result", title: "Liquid IV Lemon Lime", url: "https://store.example/lemon", image_url: "https://img.example/lemon.jpg" },
+        { type: "web_search_result", title: "Golden Cherry photo", url: "https://img.example/cherry.png" },
+      ],
+    };
+    const ctx = extractSearchContext(block);
+    expect(ctx.sources.map((s) => s.title)).toContain("Liquid IV Tropical stick packs");
+    // an image URL (direct .png, or an image_url field) becomes an image, not a source
+    expect(ctx.images.map((i) => i.url)).toContain("https://img.example/cherry.png");
+    expect(ctx.images.map((i) => i.url)).toContain("https://img.example/lemon.jpg");
+  });
+
+  it("extractCitations reads web_search_result_location off a text block", () => {
+    const block = {
+      type: "text",
+      text: "Liquid IV is clean-label.",
+      citations: [
+        { type: "web_search_result_location", url: "https://src.example/a", title: "Source A", cited_text: "clean" },
+      ],
+    };
+    expect(extractCitations(block)).toEqual([{ title: "Source A", url: "https://src.example/a" }]);
+  });
+
+  it("appends a Sources block and image markdown to the message, keeping integrity clean", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "liquid iv images",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "show me liquid iv product photos" }] },
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [
+            { type: "text", text: "Here are some Liquid IV products." },
+            {
+              type: "web_search_tool_result",
+              content: [
+                { type: "web_search_result", title: "Liquid IV Tropical stick packs", url: "https://store.example/tropical" },
+                { type: "web_search_result", title: "Liquid IV product shot", url: "https://img.example/liquid-iv.jpg" },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const assistant = t.messages.find((m) => m.role === "assistant");
+    expect(assistant?.text).toContain("Sources:");
+    expect(assistant?.text).toContain("Liquid IV Tropical stick packs");
+    expect(assistant?.text).toContain("![Liquid IV product shot](https://img.example/liquid-iv.jpg)");
+    // The result block must NOT be flagged as an unclassified/unknown block.
+    expect(t.integrity.unknown).toEqual([]);
   });
 });

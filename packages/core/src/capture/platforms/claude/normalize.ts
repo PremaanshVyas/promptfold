@@ -26,6 +26,8 @@ import type {
 import {
   classifyBlock,
   extractAntArtifactsFromText,
+  extractCitations,
+  extractSearchContext,
 } from "./artifact-parser.js";
 import { reconstructFiles } from "./reconstruct.js";
 
@@ -89,9 +91,24 @@ function normalizeMessage(
   let totalBlocks = 0;
   let classifiedBlocks = 0;
 
+  // Search sources + images are spread across several blocks of one message
+  // (a result block carries titles/urls; text blocks carry citations). Collect
+  // them message-wide, then append once so the subject of any shown image and
+  // the sources behind an answer survive into the brief.
+  const sources = new Map<string, string>(); // url -> title
+  const searchImages: Array<{ alt: string; url: string }> = [];
+
   const blocks = msg.content;
   if (Array.isArray(blocks) && blocks.length > 0) {
     for (const block of blocks) {
+      const bt = typeof block.type === "string" ? block.type : "";
+      if (bt === "web_search_tool_result" || bt === "tool_result" || bt === "knowledge") {
+        const ctx = extractSearchContext(block);
+        for (const s of ctx.sources) if (!sources.has(s.url)) sources.set(s.url, s.title);
+        for (const im of ctx.images) searchImages.push(im);
+      }
+      for (const c of extractCitations(block)) if (!sources.has(c.url)) sources.set(c.url, c.title);
+
       totalBlocks += 1;
       const c = classifyBlock(block, msg.uuid);
       switch (c.kind) {
@@ -138,6 +155,15 @@ function normalizeMessage(
       extractAntArtifactsFromText(text, msg.uuid);
     for (const a of tagArtifacts) artifacts.push({ id: nextArtifactId(), ...a });
     text = remainingText;
+  }
+
+  // Append any image found in search results as markdown (so the distiller's
+  // image extractor captures it) and a Sources block (same shape as the other
+  // platforms) so the subject of a shown image and the cited sources persist.
+  for (const im of searchImages) text += `\n\n![${im.alt}](${im.url})`;
+  if (sources.size > 0) {
+    const lines = [...sources].map(([url, title]) => `- ${title}: ${url}`);
+    text += `\n\nSources:\n${lines.join("\n")}`;
   }
 
   return {

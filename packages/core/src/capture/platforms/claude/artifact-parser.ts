@@ -143,6 +143,84 @@ function readDisplayContentArtifact(
   return null;
 }
 
+export interface SearchSource {
+  title: string;
+  url: string;
+}
+export interface SearchContext {
+  sources: SearchSource[];
+  images: Array<{ alt: string; url: string }>;
+}
+
+const IMG_URL_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)(\?|#|$)/i;
+const isHttp = (v: unknown): v is string => typeof v === "string" && /^https?:\/\//i.test(v);
+
+/**
+ * Mine a search-result block (web_search_tool_result / tool_result / knowledge)
+ * for its sources and any image URLs. claude.ai search results carry the SUBJECT
+ * of what was found in each result's `title` (e.g. "Liquid IV Tropical stick
+ * pack…"), which is exactly what a downstream session needs when an image was
+ * shown. We deep-walk because the nesting shape is undocumented and shifts.
+ */
+export function extractSearchContext(block: ClaudeContentBlock): SearchContext {
+  const sources: SearchSource[] = [];
+  const images: Array<{ alt: string; url: string }> = [];
+  const seenSrc = new Set<string>();
+  const seenImg = new Set<string>();
+
+  const addImage = (url: string, alt?: string): void => {
+    if (!isHttp(url) || seenImg.has(url)) return;
+    seenImg.add(url);
+    images.push({ alt: alt && alt.trim() ? alt.trim() : "image", url });
+  };
+
+  const walk = (x: unknown): void => {
+    if (Array.isArray(x)) {
+      for (const e of x) walk(e);
+      return;
+    }
+    if (!x || typeof x !== "object") return;
+    const o = x as Record<string, unknown>;
+    const title =
+      (typeof o["title"] === "string" && o["title"]) ||
+      (typeof o["page_title"] === "string" && o["page_title"]) ||
+      "";
+    const url = typeof o["url"] === "string" ? o["url"] : undefined;
+    if (isHttp(url)) {
+      if (IMG_URL_RE.test(url)) addImage(url, title || undefined);
+      else if (title && !seenSrc.has(url)) {
+        seenSrc.add(url);
+        sources.push({ title, url });
+      }
+    }
+    // Explicit image fields some result shapes use.
+    for (const k of ["image_url", "thumbnail_url", "thumbnail", "image", "img_url"]) {
+      const v = o[k];
+      if (isHttp(v)) addImage(v, title || undefined);
+      else if (v && typeof v === "object" && isHttp((v as Record<string, unknown>)["url"]))
+        addImage((v as Record<string, unknown>)["url"] as string, title || undefined);
+    }
+    for (const v of Object.values(o)) walk(v);
+  };
+  walk(block.content);
+  return { sources, images };
+}
+
+/** Citations attached to a text block (web_search_result_location): {title,url}. */
+export function extractCitations(block: ClaudeContentBlock): SearchSource[] {
+  const out: SearchSource[] = [];
+  const cites = block["citations"];
+  if (!Array.isArray(cites)) return out;
+  for (const c of cites) {
+    if (c && typeof c === "object") {
+      const o = c as Record<string, unknown>;
+      const url = typeof o["url"] === "string" ? o["url"] : undefined;
+      if (isHttp(url)) out.push({ title: typeof o["title"] === "string" ? o["title"] : url, url });
+    }
+  }
+  return out;
+}
+
 /**
  * Classify a single content block. Pure and total: every block returns exactly
  * one classification. The caller is responsible for assembling text + artifacts
@@ -182,8 +260,9 @@ export function classifyBlock(
     return { kind: "tool", block };
   }
 
-  if (type === "tool_result") {
-    return { kind: "tool-noise", hint: "tool_result" };
+  if (type === "tool_result" || type === "web_search_tool_result" || type === "knowledge") {
+    // Mined for sources/images by the normalizer before being dropped from text.
+    return { kind: "tool-noise", hint: type };
   }
 
   if (type === "thinking" || type === "redacted_thinking") {
