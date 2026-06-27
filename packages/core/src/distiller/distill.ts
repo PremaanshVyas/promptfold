@@ -9,6 +9,7 @@
  * loud rawFallback instead of dropping anything.
  */
 
+import { BRIEF_SCHEMA_VERSION } from "../types.js";
 import type { BriefState, NormalizedTranscript } from "../types.js";
 import { distillDeterministic, dedupeFilesByStem } from "./deterministic.js";
 import { chunkTranscript, type ChunkOptions } from "./chunk.js";
@@ -240,6 +241,8 @@ export async function distillWithModel(
         conversationId: transcript.conversationId,
         title: transcript.title,
         producedBy: client.id,
+        schemaVersion: BRIEF_SCHEMA_VERSION,
+        generatedAt: transcript.capturedAt,
         integrity: transcript.integrity,
         rawFallbacks,
       },

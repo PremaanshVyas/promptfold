@@ -105,9 +105,18 @@ export function renderBrief(state: BriefState): BriefFramings {
   const banner = honestyBanner(state);
   const body = renderBody(state);
 
-  const header =
-    `# Handoff brief, ${state.meta.title}\n\n` +
-    `_Produced by ${state.meta.producedBy} · read from Claude's data layer (complete record, not a screen scrape)._\n`;
+  // A compact stamp: brief-schema version, what produced it, and when. Lets a
+  // future build recognize and migrate an old brief, and tells the reader how
+  // fresh and how complete it is.
+  const date = state.meta.generatedAt ? state.meta.generatedAt.slice(0, 10) : "";
+  const stamp = [
+    `schema v${state.meta.schemaVersion}`,
+    `produced by ${state.meta.producedBy}`,
+    date ? `generated ${date}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const header = `# Handoff brief, ${state.meta.title}\n\n_PromptFold · ${stamp}._\n`;
 
   const humanMarkdown = [header, banner, body]
     .filter((s) => s.trim().length > 0)

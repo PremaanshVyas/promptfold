@@ -203,12 +203,27 @@ export interface BriefState {
     title: string;
     /** "deterministic" (Tier 0) or the model id used (Tier 2). */
     producedBy: string;
+    /**
+     * The brief-schema version this state was produced with. Stamped into the
+     * structured state (not just the rendered text) so a future build can read a
+     * cached brief, recognize its schema, and migrate it instead of guessing.
+     */
+    schemaVersion: string;
+    /** When the brief was generated (the capture time), ISO. */
+    generatedAt: string;
     /** Integrity carried through from capture so the UI can warn loudly. */
     integrity: IntegrityReport;
     /** Blocks/sections shown raw because they could not be distilled cleanly. */
     rawFallbacks: string[];
   };
 }
+
+/**
+ * The brief-schema version. Bump on any change to the BriefState shape so a
+ * cached brief can be recognized and migrated by a later build. "1" is the first
+ * stable schema (now / decided / open / rejected / verbatim / filesToAttach).
+ */
+export const BRIEF_SCHEMA_VERSION = "1";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Brief framings (brief renderer output), one engine, two framings.

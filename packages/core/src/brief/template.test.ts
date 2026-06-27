@@ -14,6 +14,8 @@ function baseState(over: Partial<BriefState> = {}): BriefState {
       conversationId: "c1",
       title: "Test chat",
       producedBy: "fake:model",
+      schemaVersion: "1",
+      generatedAt: "2026-06-27T00:00:00Z",
       integrity: { totalBlocks: 5, classifiedBlocks: 5, unknown: [], complete: true },
       rawFallbacks: [],
     },
@@ -35,6 +37,13 @@ describe("renderBrief", () => {
     }
   });
 
+  it("stamps the brief with a schema version + date (for future migration)", () => {
+    const { humanMarkdown } = renderBrief(baseState());
+    expect(humanMarkdown).toContain("schema v1");
+    expect(humanMarkdown).toContain("generated 2026-06-27");
+    expect(humanMarkdown).not.toContain("Claude's data layer"); // no hardcoded platform
+  });
+
   it("the resume prompt tells the next bot not to reopen rejected ideas", () => {
     const { resumePrompt } = renderBrief(baseState());
     expect(resumePrompt.toLowerCase()).toContain("rejected");
@@ -47,6 +56,8 @@ describe("renderBrief", () => {
         conversationId: "c1",
         title: "Test chat",
         producedBy: "fake:model",
+      schemaVersion: "1",
+      generatedAt: "2026-06-27T00:00:00Z",
         integrity: {
           totalBlocks: 5,
           classifiedBlocks: 4,
@@ -68,6 +79,8 @@ describe("renderBrief", () => {
         conversationId: "c1",
         title: "Test chat",
         producedBy: "fake:model",
+      schemaVersion: "1",
+      generatedAt: "2026-06-27T00:00:00Z",
         integrity: { totalBlocks: 5, classifiedBlocks: 5, unknown: [], complete: true },
         rawFallbacks: ["Chunk 2/3 did not parse; raw output kept out of merge."],
       },

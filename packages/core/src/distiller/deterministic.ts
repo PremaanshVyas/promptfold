@@ -9,6 +9,7 @@
  * Pure and deterministic: same transcript in → same brief out.
  */
 
+import { BRIEF_SCHEMA_VERSION } from "../types.js";
 import type {
   Artifact,
   BriefState,
@@ -379,6 +380,8 @@ export function distillDeterministic(
       conversationId: transcript.conversationId,
       title: transcript.title,
       producedBy: "deterministic",
+      schemaVersion: BRIEF_SCHEMA_VERSION,
+      generatedAt: transcript.capturedAt,
       integrity: transcript.integrity,
       rawFallbacks: [],
     },
