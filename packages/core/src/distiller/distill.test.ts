@@ -113,6 +113,32 @@ describe("distillWithModel", () => {
     expect(brief.meta.rawFallbacks.join(" ")).toContain("deterministic");
   });
 
+  it("does not add a duplicate table when the model already captured an equivalent one", async () => {
+    const table =
+      "| Brand | Sodium | Potassium |\n| --- | --- | --- |\n| Liquid IV | 500mg | 380mg |\n| LMNT | 1000mg | 200mg |";
+    const t = normalizeConversation(
+      { uuid: "c", name: "x", chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "compare" }] },
+        { uuid: "a", sender: "assistant", content: [{ type: "text", text: `Here:\n\n${table}` }] },
+      ] },
+      { capturedAt: AT },
+    );
+    // The model returns the SAME table reformatted (extra spaces, a Vitamin C col).
+    const modelTable =
+      "| Brand | Sodium | Potassium | Vitamin C |\n|---|---|---|---|\n| Liquid IV | 500mg | 380mg | yes |\n| LMNT | 1000mg | 200mg | no |";
+    const client = fakeClient({
+      chunkOut: () => JSON.stringify({
+        decided: [], open: [], rejected: [],
+        verbatim: [{ kind: "table", label: "electrolyte comparison", value: modelTable }],
+        filesToAttach: [],
+      }),
+    });
+    const { brief } = await distillWithModel(t, client);
+    const tables = brief.verbatim.filter((v) => v.kind === "table");
+    expect(tables).toHaveLength(1); // the model's, not a near-duplicate pair
+    expect(tables[0]?.label).toBe("electrolyte comparison");
+  });
+
   it("unions model files-to-attach with the deterministic referenced-file detector", async () => {
     const t = normalizeConversation(
       { uuid: "c", name: "x", chat_messages: [

@@ -164,17 +164,36 @@ export async function distillWithModel(
   // prose or drops an image. Every table and image deterministically found in
   // the chat is force-added to verbatim, regardless of what the model returned.
   // This is the "without fail" path for content types that must never vanish.
-  const GUARANTEED: ReadonlySet<string> = new Set(["table", "image"]);
-  const vKey = (kind: string, value: string) => `${kind}:${value.replace(/\s+/g, "")}`;
-  const have = new Set(
-    finalSections.verbatim
-      .filter((v) => GUARANTEED.has(v.kind))
-      .map((v) => vKey(v.kind, v.value)),
+  // Dedup is FUZZY for tables: the model often reproduces the same table
+  // reformatted or with a row added/removed, so an exact key would let a
+  // near-duplicate slip through. We compare token overlap and skip if the model
+  // already has a substantially-equivalent table.
+  const tokenize = (s: string) =>
+    new Set(s.toLowerCase().split(/[^a-z0-9.%$]+/).filter((t) => t.length > 0));
+  const overlap = (a: Set<string>, b: Set<string>) => {
+    if (a.size === 0 || b.size === 0) return 0;
+    let shared = 0;
+    for (const t of a) if (b.has(t)) shared += 1;
+    return shared / Math.min(a.size, b.size);
+  };
+  const existingTables = finalSections.verbatim
+    .filter((v) => v.kind === "table")
+    .map((v) => tokenize(v.value));
+  const existingImages = new Set(
+    finalSections.verbatim.filter((v) => v.kind === "image").map((v) => v.value.toLowerCase().trim()),
   );
   for (const v of deterministic.verbatim) {
-    if (GUARANTEED.has(v.kind) && !have.has(vKey(v.kind, v.value))) {
-      finalSections.verbatim.push(v);
-      have.add(vKey(v.kind, v.value));
+    if (v.kind === "image") {
+      if (!existingImages.has(v.value.toLowerCase().trim())) {
+        finalSections.verbatim.push(v);
+        existingImages.add(v.value.toLowerCase().trim());
+      }
+    } else if (v.kind === "table") {
+      const sig = tokenize(v.value);
+      if (!existingTables.some((e) => overlap(sig, e) >= 0.8)) {
+        finalSections.verbatim.push(v);
+        existingTables.push(sig);
+      }
     }
   }
 

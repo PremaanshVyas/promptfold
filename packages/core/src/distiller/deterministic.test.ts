@@ -141,6 +141,39 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(t.integrity.unknown).toEqual([]);
   });
 
+  it("emits ONE image item for a turn with both an image block and search thumbnails (no triple, no fragment)", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "liquid iv images",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "show liquid iv flavours" }] },
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [
+            { type: "text", text: "Here you go." },
+            { type: "image", alt_text: "Liquid I.V. Golden Cherry hydration", source: { type: "url", url: "https://img.example/gc.jpg" } },
+            {
+              type: "web_search_tool_result",
+              content: [
+                { type: "web_search_result", title: "Liquid I.V. Golden Cherry", url: "https://img.example/a.jpg" },
+                { type: "web_search_result", title: "Liquid Death sparkling", url: "https://img.example/b.jpg" },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const images = distillDeterministic(t).verbatim.filter((v) => v.kind === "image");
+    // Exactly one image entry for the turn, and its value is a real subject,
+    // not the truncated common-prefix fragment "Liquid".
+    expect(images).toHaveLength(1);
+    expect(images[0]?.value).not.toBe("Liquid");
+    expect(images[0]?.value.toLowerCase()).toContain("liquid i.v.");
+    expect(images[0]?.value).not.toMatch(/https?:\/\//);
+  });
+
   it("keeps spreadsheet formulas as separate constraint items, never merged or typed api", () => {
     const convo: ClaudeConversation = {
       uuid: "c",

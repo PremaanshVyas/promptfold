@@ -206,6 +206,13 @@ export function extractSearchContext(block: ClaudeContentBlock): SearchContext {
   return { sources, images };
 }
 
+/** The subject/caption of an image content block (no URL), or "" if not one. */
+export function imageSubjectOf(block: ClaudeContentBlock): string {
+  if (block["type"] !== "image") return "";
+  const alt = typeof block["alt_text"] === "string" ? (block["alt_text"] as string).trim() : "";
+  return alt || "image";
+}
+
 /** Citations attached to a text block (web_search_result_location): {title,url}. */
 export function extractCitations(block: ClaudeContentBlock): SearchSource[] {
   const out: SearchSource[] = [];
@@ -237,18 +244,11 @@ export function classifyBlock(
   }
 
   if (type === "image") {
-    // An image is a real content type. Surface it as a markdown image so the
-    // distiller's image extractor captures it (URL when present; otherwise a
-    // bare note so a content-complete handoff records that an image was shown).
-    const src = (block as { source?: unknown }).source;
-    let url = "";
-    if (src && typeof src === "object") {
-      const s = src as Record<string, unknown>;
-      if (typeof s["url"] === "string") url = s["url"] as string;
-      else if (typeof s["image_url"] === "string") url = s["image_url"] as string;
-    }
-    const alt = typeof block.alt_text === "string" ? block.alt_text : "image";
-    return { kind: "text", text: url ? `![${alt}](${url})` : `[image shown in chat: ${alt}]` };
+    // Images are gathered message-wide by the normalizer (see imageSubjectOf)
+    // and emitted as ONE subject note, so we do NOT inject text here, doing so
+    // double-counted (a markdown image plus the search-collapse note). Counted,
+    // not unknown.
+    return { kind: "tool-noise", hint: "image" };
   }
 
   if (type === "tool_use") {

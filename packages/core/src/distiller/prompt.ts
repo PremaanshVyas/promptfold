@@ -13,7 +13,7 @@ export const BRIEF_JSON_SHAPE = `{
   "decided":  [{ "text": string, "replaces"?: string }],
   "open":     [{ "text": string }],
   "rejected": [{ "idea": string, "why": string }],
-  "verbatim": [{ "kind": "code"|"table"|"image"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
+  "verbatim": [{ "kind": "code"|"table"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
   "filesToAttach": [{ "name": string, "why": string, "source": "chat"|"referenced" }]
 }`;
 
@@ -33,7 +33,11 @@ const SHARED_RULES = `Rules you follow without exception:
 - "now" is 1-3 plain, present-tense sentences stating what is being worked on at
   the LATEST point of the chat (the current focus). Factual, no advice, no
   "you should". If the chat just answered a question, "now" states what was asked
-  and answered.
+  and answered. RECENCY BEATS PROMINENCE: anchor "now" to the FINAL exchange (the
+  last user message and its answer), even if an earlier code artifact, file, or
+  build step looks more important. A salient mid-chat deliverable is NOT "now"
+  unless the last turn is still about it. If the last turns shifted topic (e.g.
+  to reviewing/testing/iterating), "now" reflects THAT, not the old frontier.
 - GROUND EVERYTHING. Before you record an item, find the exact place in the text
   that supports it. If you cannot point to it, do not record it. Never invent a
   decision, an open thread, a value, or a reason.
@@ -55,6 +59,14 @@ const SHARED_RULES = `Rules you follow without exception:
   "=B2/B3, =C2/C3"). Type by what it is: a cell/spreadsheet formula is "code" or
   "constraint", NEVER "api" (kind "api" is only for URLs and REST endpoints like
   GET /v1/users).
+- VERBATIM IS LOAD-BEARING STATE, NOT BUILD MINUTIAE. Capture the values a next
+  session must honor (a final decision, a key number, a constraint, an API
+  contract, the final inline deliverable). Do NOT pin incidental implementation
+  details lifted from a script or file: colour hex codes (#1A1A1A), margins
+  (0.9*inch), number/format strings (0.0"x"), layout/row-placement notes,
+  internal variable names. If the file itself is attached, its internal
+  constants do not need re-pinning. When unsure whether a value is state or
+  scaffolding, leave it out.
 - TABLES AND STRUCTURED CONTENT ARE LOAD-BEARING. If the conversation contains a
   TABLE (a comparison, a spec sheet, a dataset, a pricing/options grid), keep it
   WHOLE in "verbatim" with kind "table", reproduced as a markdown table exactly,
@@ -62,14 +74,11 @@ const SHARED_RULES = `Rules you follow without exception:
   goes for boxed/callout content, step lists, and any structured data the chat
   produced: capture it exactly, do not flatten it. Tables are usually the answer,
   not decoration.
-- IMAGES: DESCRIBE, DON'T EMBED. If the chat showed or generated an image,
-  record ONE concise line per image event in "verbatim" with kind "image":
-  "value" is the SUBJECT ("Liquid IV product photo", "revenue bar chart"), plus
-  the source if known ("image search"). NEVER put an image URL in the value,
-  hotlinked image URLs rot and are not state to preserve; capture the subject,
-  discard the URL. Do NOT mark images kind "constraint" (they bind nothing) and
-  do NOT manufacture a gallery: if one search showed several thumbnails of the
-  same thing, that is ONE image line, not one per thumbnail.
+- IMAGES ARE HANDLED FOR YOU. Do NOT add any "verbatim" item for an image, a
+  shown photo, a chart, a screenshot, or an "[image shown: …]" note, image
+  presence is captured automatically elsewhere, and a second copy from you
+  duplicates it. You may mention an image in "now" ONLY if a shown image is the
+  current focus of the last turn. Never paste an image URL anywhere.
 - CRUSH TO NOTHING: apologies, filler, dead ends, retries, tool mechanics, and
   "try this / no that failed" loops. Maximize recall first, then cut noise.
 - LATEST STATE WINS. If a value changed over the chat (e.g. a timeout 30 then

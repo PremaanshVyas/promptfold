@@ -28,6 +28,7 @@ import {
   extractAntArtifactsFromText,
   extractCitations,
   extractSearchContext,
+  imageSubjectOf,
 } from "./artifact-parser.js";
 import { reconstructFiles } from "./reconstruct.js";
 
@@ -52,8 +53,10 @@ function commonSubject(labels: string[]): string {
     const w = first[i]!.toLowerCase();
     if (!wordLists.every((ws) => (ws[i] ?? "").toLowerCase() === w)) break;
   }
-  const prefix = first.slice(0, i).join(" ").trim();
-  return prefix.length >= 2 ? prefix : clean[0]!;
+  const prefixWords = first.slice(0, i);
+  // Require a 2+ word shared prefix (a real brand-level subject like "Liquid
+  // IV"); a 1-word prefix ("Liquid") is a fragment, fall back to a full label.
+  return prefixWords.length >= 2 ? prefixWords.join(" ") : clean[0]!;
 }
 
 /**
@@ -117,7 +120,8 @@ function normalizeMessage(
   // them message-wide, then append once so the subject of any shown image and
   // the sources behind an answer survive into the brief.
   const sources = new Map<string, string>(); // url -> title
-  const searchImages: Array<{ alt: string; url: string }> = [];
+  const imageLabels: string[] = []; // subjects of every image shown in this message
+  let fromSearch = false;
 
   const blocks = msg.content;
   if (Array.isArray(blocks) && blocks.length > 0) {
@@ -126,8 +130,12 @@ function normalizeMessage(
       if (bt === "web_search_tool_result" || bt === "tool_result" || bt === "knowledge") {
         const ctx = extractSearchContext(block);
         for (const s of ctx.sources) if (!sources.has(s.url)) sources.set(s.url, s.title);
-        for (const im of ctx.images) searchImages.push(im);
+        for (const im of ctx.images) {
+          imageLabels.push(im.alt);
+          fromSearch = true;
+        }
       }
+      if (bt === "image") imageLabels.push(imageSubjectOf(block));
       for (const c of extractCitations(block)) if (!sources.has(c.url)) sources.set(c.url, c.title);
 
       totalBlocks += 1;
@@ -178,11 +186,13 @@ function normalizeMessage(
     text = remainingText;
   }
 
-  // Note that an image was shown by its SUBJECT, collapsed to ONE line for this
-  // turn, never the rot-prone retailer URLs and never an embedded gallery.
-  // Sources (non-image citations) keep their title+url, the established pattern.
-  if (searchImages.length > 0) {
-    text += `\n\n[image shown: ${commonSubject(searchImages.map((im) => im.alt))} (image search)]`;
+  // Note that an image was shown by its SUBJECT, ONE note for the whole turn
+  // (image blocks and search thumbnails combined), never the rot-prone retailer
+  // URLs and never an embedded gallery. Sources (non-image citations) keep their
+  // title+url, the established pattern.
+  if (imageLabels.length > 0) {
+    const subject = commonSubject(imageLabels);
+    text += `\n\n[image shown: ${subject}${fromSearch ? " (image search)" : ""}]`;
   }
   if (sources.size > 0) {
     const lines = [...sources].map(([url, title]) => `- ${title}: ${url}`);
