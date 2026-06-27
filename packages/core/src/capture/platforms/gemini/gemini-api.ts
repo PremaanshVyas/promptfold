@@ -96,6 +96,21 @@ function candidateText(candidate: unknown[]): string {
   return card || primary;
 }
 
+/**
+ * The model candidates live at conv_turn[3][0] as a LIST (one entry per draft /
+ * regeneration); each entry is [rcid, [text], ...]. Confirmed against a real
+ * Gemini response: t[3] = [[[ "rc_…", ["…"] ]]], so the candidate is t[3][0][0],
+ * not t[3][0]. Pick the first draft that actually carries text.
+ */
+function pickCandidate(turn: unknown[]): unknown[] {
+  const candidates = (turn?.[3] as unknown[])?.[0];
+  if (!Array.isArray(candidates)) return [];
+  for (const c of candidates) {
+    if (Array.isArray(c) && candidateText(c)) return c;
+  }
+  return (Array.isArray(candidates[0]) ? candidates[0] : []) as unknown[];
+}
+
 /** The longest string anywhere inside a value (for the canvas doc at [30]). */
 function deepLongestString(v: unknown): string {
   let best = "";
@@ -139,8 +154,8 @@ export function normalizeGeminiPayload(
       // user message text -> conv_turn[2][0][0]
       const userText = str((((t?.[2] as unknown[])?.[0]) as unknown[])?.[0]);
       if (userText) messages.push({ uuid: `gm-${messages.length}`, role: "human", text: userText });
-      // model candidate -> conv_turn[3][0]; text -> candidate[1][0] (or [22][0])
-      const candidate = ((t?.[3] as unknown[])?.[0]) as unknown[];
+      // model candidate -> conv_turn[3][0][0]; text -> candidate[1][0] (or [22][0])
+      const candidate = pickCandidate(t);
       const modelText = candidateText(candidate);
       if (modelText) messages.push({ uuid: `gm-${messages.length}`, role: "assistant", text: modelText });
       // canvas / immersive document body -> candidate[30]
