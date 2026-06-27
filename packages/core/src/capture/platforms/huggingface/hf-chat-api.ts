@@ -12,8 +12,8 @@
  * 24-char Mongo ObjectId in the URL; a 7-char id is a share link (skipped).
  */
 
-import type { NormalizedMessage, NormalizedTranscript, Role } from "../types.js";
-import { CaptureError, type FetchLike } from "./shared/http.js";
+import type { NormalizedMessage, NormalizedTranscript, Role } from "../../../types.js";
+import { CaptureError, type FetchLike } from "../../shared/http.js";
 
 interface HfMessage {
   from?: string;

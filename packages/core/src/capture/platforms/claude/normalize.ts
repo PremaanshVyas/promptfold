@@ -22,7 +22,7 @@ import type {
   Role,
   UnknownBlock,
   UploadedFile,
-} from "../types.js";
+} from "../../../types.js";
 import {
   classifyBlock,
   extractAntArtifactsFromText,
@@ -165,7 +165,7 @@ export interface NormalizeOptions {
 export {
   transcriptFromMessages,
   type SimpleMessage,
-} from "./shared/transcript.js";
+} from "../../shared/transcript.js";
 
 export function normalizeConversation(
   convo: ClaudeConversation,

@@ -6,19 +6,19 @@ export {
   CaptureError,
   type CaptureOptions,
   type FetchLike,
-} from "./claude-api.js";
+} from "./platforms/claude/claude-api.js";
 export {
   normalizeConversation,
   transcriptFromMessages,
   activeBranch,
   type NormalizeOptions,
   type SimpleMessage,
-} from "./normalize.js";
+} from "./platforms/claude/normalize.js";
 export {
   classifyBlock,
   extractAntArtifactsFromText,
   type BlockClassification,
-} from "./artifact-parser.js";
+} from "./platforms/claude/artifact-parser.js";
 export {
   captureChatGptConversation,
   normalizeChatGptConversation,
@@ -26,31 +26,31 @@ export {
   linearBranch,
   type CaptureChatGptOptions,
   type GptConversation,
-} from "./chatgpt-api.js";
+} from "./platforms/chatgpt/chatgpt-api.js";
 export {
   capturePerplexityThread,
   normalizePerplexityThread,
   perplexityThreadIdFromUrl,
   type CapturePerplexityOptions,
-} from "./perplexity-api.js";
+} from "./platforms/perplexity/perplexity-api.js";
 export {
   captureDeepSeekConversation,
   normalizeDeepSeek,
   deepseekSessionIdFromUrl,
   type CaptureDeepSeekOptions,
-} from "./deepseek-api.js";
+} from "./platforms/deepseek/deepseek-api.js";
 export {
   captureGrokConversation,
   normalizeGrok,
   grokConversationIdFromUrl,
   type CaptureGrokOptions,
-} from "./grok-api.js";
+} from "./platforms/grok/grok-api.js";
 export {
   captureHfConversation,
   normalizeHfConversation,
   hfConversationIdFromUrl,
   type CaptureHfOptions,
-} from "./hf-chat-api.js";
+} from "./platforms/huggingface/hf-chat-api.js";
 export {
   captureGeminiConversation,
   normalizeGeminiPayload,
@@ -59,4 +59,4 @@ export {
   type CaptureGeminiOptions,
   type GeminiTokens,
   type PostFetch,
-} from "./gemini-api.js";
+} from "./platforms/gemini/gemini-api.js";

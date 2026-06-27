@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { reconstructFiles } from "./reconstruct.js";
-import type { ClaudeContentBlock } from "../types.js";
+import type { ClaudeContentBlock } from "../../../types.js";
 
 function tool(name: string, input: Record<string, unknown>): ClaudeContentBlock {
   return { type: "tool_use", name, input };

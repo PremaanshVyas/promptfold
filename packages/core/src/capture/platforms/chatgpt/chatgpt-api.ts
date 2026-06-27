@@ -16,8 +16,8 @@
  * inference. `fetch` is injected so this is unit-testable without a browser.
  */
 
-import type { Artifact, NormalizedMessage, NormalizedTranscript, Role } from "../types.js";
-import { CaptureError, type FetchLike } from "./shared/http.js";
+import type { Artifact, NormalizedMessage, NormalizedTranscript, Role } from "../../../types.js";
+import { CaptureError, type FetchLike } from "../../shared/http.js";
 
 // ── on-wire shapes (only the subset we use) ────────────────────────────────
 interface GptContent {

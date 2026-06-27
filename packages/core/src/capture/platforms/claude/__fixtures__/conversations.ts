@@ -7,7 +7,7 @@
  *   - an unknown block type (must be surfaced, not dropped)
  */
 
-import type { ClaudeConversation } from "../types.js";
+import type { ClaudeConversation } from "../../../../types.js";
 
 /** A small conversation with one of each artifact format + an unknown block. */
 export const mixedArtifactsConvo: ClaudeConversation = {

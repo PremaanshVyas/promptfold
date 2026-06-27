@@ -4,7 +4,7 @@ import {
   grokConversationIdFromUrl,
   captureGrokConversation,
 } from "./grok-api.js";
-import type { FetchLike } from "./shared/http.js";
+import type { FetchLike } from "../../shared/http.js";
 
 const AT = "2026-06-27T00:00:00Z";
 

@@ -17,9 +17,9 @@ import type {
   ClaudeConversation,
   ClaudeOrg,
   NormalizedTranscript,
-} from "../types.js";
+} from "../../../types.js";
 import { normalizeConversation } from "./normalize.js";
-import { CaptureError, type FetchLike } from "./shared/http.js";
+import { CaptureError, type FetchLike } from "../../shared/http.js";
 
 // Re-export so existing importers keep working during/after the reorg.
 export { CaptureError, type FetchLike };

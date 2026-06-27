@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { distillWithModel } from "./distill.js";
-import { normalizeConversation } from "../capture/normalize.js";
+import { normalizeConversation } from "../capture/index.js";
 import type { LlmClient, LlmRequest } from "./llm.js";
 import type { ClaudeConversation } from "../types.js";
 

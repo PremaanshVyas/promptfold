@@ -15,7 +15,7 @@
  *   - "unknown"            → could NOT classify → surfaced loudly, never dropped
  */
 
-import type { Artifact, ClaudeContentBlock } from "../types.js";
+import type { Artifact, ClaudeContentBlock } from "../../../types.js";
 
 export type BlockClassification =
   | { kind: "text"; text: string }

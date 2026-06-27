@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { distillDeterministic } from "./deterministic.js";
-import { normalizeConversation } from "../capture/normalize.js";
-import { mixedArtifactsConvo } from "../__fixtures__/conversations.js";
+import { normalizeConversation } from "../capture/index.js";
+import { mixedArtifactsConvo } from "../capture/platforms/claude/__fixtures__/conversations.js";
 import type { ClaudeConversation } from "../types.js";
 
 const AT = "2026-06-26T12:00:00Z";

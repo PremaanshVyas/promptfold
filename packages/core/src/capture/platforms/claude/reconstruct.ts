@@ -13,8 +13,8 @@
  *   3. else: nothing was formally delivered, fall back to all written files.
  */
 
-import type { ClaudeContentBlock } from "../types.js";
-import { isBinaryFile } from "./shared/file-types.js";
+import type { ClaudeContentBlock } from "../../../types.js";
+import { isBinaryFile } from "../../shared/file-types.js";
 
 const OUTPUTS_DIR = "/mnt/user-data/outputs/";
 

@@ -8,7 +8,7 @@ import {
   mixedArtifactsConvo,
   flatTextConvo,
   sandboxWritingConvo,
-} from "../__fixtures__/conversations.js";
+} from "./__fixtures__/conversations.js";
 
 const AT = "2026-06-26T12:00:00Z";
 

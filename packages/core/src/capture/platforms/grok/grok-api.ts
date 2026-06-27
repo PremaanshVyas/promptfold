@@ -11,8 +11,8 @@
  * Confirmed against the SaveMyContext and personal-ai-memory content scripts.
  */
 
-import type { NormalizedMessage, NormalizedTranscript, Role } from "../types.js";
-import { CaptureError, type FetchLike } from "./shared/http.js";
+import type { NormalizedMessage, NormalizedTranscript, Role } from "../../../types.js";
+import { CaptureError, type FetchLike } from "../../shared/http.js";
 
 const DEFAULT_BASE = "https://grok.com";
 
