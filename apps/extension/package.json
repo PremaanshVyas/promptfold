@@ -1,6 +1,6 @@
 {
   "name": "@promptfold/extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "promptfold MV3 Chrome extension, one-click context handoff inside Claude.ai.",
   "type": "module",

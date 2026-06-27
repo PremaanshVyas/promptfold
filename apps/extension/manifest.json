@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PromptFold",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One click turns a long AI chat into a structured brief you can carry to a fresh chat, another chatbot, or a teammate.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -9,7 +9,9 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://claude.ai/*",
     "https://chatgpt.com/*",
@@ -38,7 +40,9 @@
         "https://chat.deepseek.com/*",
         "https://huggingface.co/chat/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
