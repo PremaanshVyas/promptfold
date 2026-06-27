@@ -246,6 +246,29 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(vals).toContain("B12=B5+B6+B7"); // the total-electrolytes row is not dropped
   });
 
+  it("captures a ChatGPT sandbox file by NAME + status, never the brittle path", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "report",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "make the report" }] },
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [{ type: "text", text:
+            "Done. [Download the report](sandbox:/mnt/data/LiquidIV_vs_LMNT_Report.docx)" }],
+        },
+      ],
+    };
+    const brief = distillDeterministic(normalizeConversation(convo, { capturedAt: AT }));
+    const f = brief.filesToAttach.find((x) => x.name.includes("LiquidIV_vs_LMNT_Report"));
+    expect(f).toBeDefined();
+    expect(f?.name).toBe("LiquidIV_vs_LMNT_Report.docx"); // basename only
+    expect(f?.source).toBe("chat");
+    // No file in the list keeps the session-local sandbox path.
+    expect(brief.filesToAttach.every((x) => !/sandbox:|\/mnt\/data\//.test(x.name))).toBe(true);
+  });
+
   it("does not list a web URL (incl. multi-label www. host) as an attachable file", () => {
     const convo: ClaudeConversation = {
       uuid: "c",

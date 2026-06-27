@@ -42,9 +42,17 @@ export function stemOf(path: string): string {
   return (dot > 0 ? base.slice(0, dot) : base).toLowerCase();
 }
 
-/** Paths inside Claude's sandbox, internal, not the user's own files. */
+/**
+ * A model sandbox path: Claude's (/mnt/user-data, /home/claude, /tmp) or
+ * ChatGPT's (sandbox:/mnt/data, /mnt/data). These are session-local working
+ * paths, not the user's own files, and they will NOT exist in a new chat, so
+ * they must never be presented as an authoritative file to open/attach.
+ */
 export function isSandboxPath(path: string): boolean {
-  return /\/(mnt\/user-data|home\/claude|tmp)\//.test("/" + path);
+  return (
+    /^sandbox:/i.test(path) ||
+    /\/(mnt\/user-data|mnt\/data|home\/claude|tmp)\//.test("/" + path.replace(/^sandbox:/i, ""))
+  );
 }
 
 /** True when a file's bytes must be attached rather than inlined. */

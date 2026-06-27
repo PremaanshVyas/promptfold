@@ -122,6 +122,11 @@ const SHARED_RULES = `Rules you follow without exception:
 - "filesToAttach" lists things to bring for full context: big/binary files from
   the chat, and things the chat only REFERRED to but never showed. Each needs
   one line in "why". Do not list intermediate drafts, only the final file.
+- NEVER store a model SANDBOX PATH as authoritative. Paths like
+  "sandbox:/mnt/data/Report.docx" or "/mnt/data/..." or "/mnt/user-data/..." are
+  session-local and will NOT exist in a new chat. Refer to a generated file by
+  its NAME and type ("Report.docx, a Word document, generated this session"),
+  never by its sandbox path, and never put such a path in "verbatim".
 - Keep each "verbatim" value SHORT (a value, a path, a constraint, a small
   snippet), EXCEPT the single final inline deliverable above. NEVER paste a whole
   file or a long essay into "verbatim"; list those in "filesToAttach" instead.

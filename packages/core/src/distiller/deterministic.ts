@@ -17,7 +17,7 @@ import type {
   VerbatimItem,
 } from "../types.js";
 import { collapseArtifactLineage } from "./dedupe.js";
-import { isSandboxPath, stemOf } from "../capture/shared/file-types.js";
+import { basenameOf, isSandboxPath, stemOf } from "../capture/shared/file-types.js";
 
 /** Above this, code is better attached as a file than pasted inline. */
 const BIG_CODE_CHARS = 1500;
@@ -215,6 +215,35 @@ function fromApiMentions(transcript: NormalizedTranscript): VerbatimItem[] {
   return dedupe(items, (i) => i.value);
 }
 
+// A file generated into ChatGPT's sandbox, referenced by its session-local path:
+// sandbox:/mnt/data/Report.docx, or a bare /mnt/data/... path. (Claude's
+// /mnt/user-data/outputs files are reconstructed into deliverables separately,
+// so they are deliberately NOT matched here.)
+const SANDBOX_FILE_RE = /(?:sandbox:)?\/mnt\/data\/([^\s)"'`\]]+\.\w{1,5})/g;
+
+/**
+ * Files generated in a model sandbox and referenced only by their session-local
+ * path (e.g. ChatGPT's `sandbox:/mnt/data/Report.docx`). Capture them by NAME
+ * with a clear status, never the brittle path, which does not exist in a new
+ * chat. This is the "treat generated files as artifacts, not paths" fix.
+ */
+function fromGeneratedFiles(transcript: NormalizedTranscript): FileToAttach[] {
+  const seen = new Set<string>();
+  const out: FileToAttach[] = [];
+  const all = transcript.messages.map((m) => m.text).join("\n");
+  for (const m of all.matchAll(SANDBOX_FILE_RE)) {
+    const base = basenameOf(m[1] ?? "");
+    if (!base || seen.has(base.toLowerCase())) continue;
+    seen.add(base.toLowerCase());
+    out.push({
+      name: base,
+      source: "chat",
+      why: "generated in the previous session; its sandbox path is session-local and will not exist in a new chat, so regenerate it or attach the saved copy",
+    });
+  }
+  return out;
+}
+
 /** A web URL/host like www.nutritionvalue.org/x.html, NOT a file the user made. */
 function looksLikeUrl(name: string): boolean {
   const firstSeg = (name.split("/")[0] ?? "").replace(/^https?:\/\//i, "");
@@ -264,6 +293,11 @@ function referencedFiles(transcript: NormalizedTranscript): FileToAttach[] {
  *     referenced mentions by stem.
  */
 export function dedupeFilesByStem(files: FileToAttach[]): FileToAttach[] {
+  // Safety net: never present a session-local sandbox path as a file name (it
+  // will not exist in a new chat). Show the basename only.
+  files = files.map((f) =>
+    isSandboxPath(f.name) ? { ...f, name: basenameOf(f.name) } : f,
+  );
   const producedStems = new Set(
     files.filter((f) => f.source === "chat").map((f) => stemOf(f.name)),
   );
@@ -322,6 +356,7 @@ export function distillDeterministic(
   const maxRef = opts.maxReferencedFiles ?? 25;
   const files = dedupeFilesByStem([
     ...fromArt.files,
+    ...fromGeneratedFiles(transcript),
     ...uploadFiles,
     ...referencedFiles(transcript).slice(0, maxRef),
   ]);
