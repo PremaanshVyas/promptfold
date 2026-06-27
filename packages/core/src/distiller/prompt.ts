@@ -30,10 +30,13 @@ const SHARED_RULES = `Rules you follow without exception:
   chats (a pure Q&A has no "rejected"; a tutoring chat has few "decided"). That
   is fine. Use [] for an empty section; force nothing. The "now" line and
   "verbatim" facts carry chats that have no decisions.
-- "now" is 1-3 plain, present-tense sentences stating what is being worked on at
-  the LATEST point of the chat (the current focus). Factual, no advice, no
-  "you should". If the chat just answered a question, "now" states what was asked
-  and answered. RECENCY BEATS PROMINENCE: anchor "now" to the FINAL exchange (the
+- "now" is 1-3 plain, present-tense sentences describing the STATE OF THE WORK
+  itself (what is being built, decided, or solved, and where it stands), in the
+  project's own terms. Describe the PROJECT STATE, not the conversation: write
+  "Building X; the comparison is done and the open question is Y", NOT "The
+  assistant evaluated X" or "The user asked about Y". A continuation model cares
+  what the project is, not what messages were exchanged. Factual, no advice, no
+  "you should". RECENCY BEATS PROMINENCE: anchor "now" to the FINAL exchange (the
   last user message and its answer), even if an earlier code artifact, file, or
   build step looks more important. A salient mid-chat deliverable is NOT "now"
   unless the last turn is still about it. If the last turns shifted topic (e.g.
@@ -112,6 +115,9 @@ const SHARED_RULES = `Rules you follow without exception:
   chunk you are given is labelled with its position; later chunks supersede
   earlier ones.
 - For every decision, capture what it REPLACED in "replaces" when known.
+- INCLUDE THE REASON in a "decided" item when the conversation states one ("use
+  Postgres because the data is relational"). The reason stops a future model from
+  "fixing" a settled choice. Only when actually stated, never invent one.
 - FINAL INLINE DELIVERABLE. If the user asked the assistant to write a specific
   piece of text (an email, a letter, a message, a cover letter, a short post, a
   bio) and it lives ONLY inline in the chat (not saved as a file), put the FINAL
