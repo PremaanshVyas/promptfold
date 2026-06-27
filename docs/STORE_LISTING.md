@@ -25,33 +25,50 @@ forms, submit).
 ## Store listing copy
 
 - **Name:** PromptFold
-- **Summary (132 char max):**
-  `Turn a long AI chat into a structured, paste-ready handoff brief. Works on Claude, ChatGPT, Gemini and more. BYOK, no server.`
-- **Category:** Productivity
-- **Language:** English
-- **Description:**
+- **Summary:** auto-filled from the package (the manifest `description`). It
+  contains no brand names, leave it as is.
+- **Category:** Workflow & Planning (under Productivity)
+- **Language:** English (United States)
+- **Description:** (NOTE: do NOT list chatbot brand names, a comma-separated list
+  of them reads as keyword spam and got the first submission rejected.)
 
 ```
-PromptFold turns a long, messy AI chat into a short, structured handoff brief
-you can paste into a fresh chat, a different chatbot, or hand to a teammate,
-without losing anything that matters.
+Turn a long, messy AI chat into a short, structured handoff brief you can paste
+into a fresh chat, a different assistant, or hand to a teammate, without losing
+anything that matters.
 
-One click reads the whole conversation from the platform's own data layer (not a
-screen scrape) and distills it into:
-- Now: where the work stands
+Long AI chats slow down near the context limit, the next person cannot read 200
+messages to catch up, and a fresh assistant keeps re-suggesting ideas you already
+ruled out. Most chat exporters just dump the raw transcript, which moves the mess
+somewhere else. This keeps the state and the decisions, not the mess.
+
+HOW IT WORKS
+Click the Fold button on your open chat. The whole conversation is read from the
+page using your own session and distilled into a compact, paste-ready summary:
+- Now: where the work currently stands
 - Decided: the choices that are settled
 - Open: the questions still unresolved
-- Rejected (and why): dead ideas, so a fresh chatbot stops re-suggesting them
+- Rejected (and why): dead ideas, so a fresh assistant stops re-suggesting them
 - Verbatim: code, tables, formulas, and exact values, kept byte-for-byte
 - Files to attach: what to bring for full context
 
-Works across Claude, ChatGPT, Gemini, Perplexity, Grok, DeepSeek, and HuggingChat,
-reading each platform's own conversation API for a complete capture.
+Works with the major AI chat assistants, reading each conversation from the page
+you already have open, using your own session.
 
-Bring your own key (BYOK): without a key you still get a complete on-device
-capture; add your own Anthropic or OpenAI key for the full reasoned brief. No
-accounts, no daily limits, no middleman server. Your chat is read locally and sent
-only to the provider you chose with your key.
+BRING YOUR OWN KEY (BYOK)
+Without a key you still get a complete on-device capture: exact values, code,
+tables, and the files-to-attach list. Add your own AI provider API key for the
+full reasoned brief.
+
+PRIVATE BY DESIGN
+- No accounts, no daily limits, no length caps.
+- No middleman server. Your chat is read locally in your browser and sent only to
+  the AI provider you chose with your own key.
+- Your API key is stored only on your machine and is never logged or sent
+  anywhere else.
+- No tracking, no analytics, no ads.
+
+Full documentation: https://github.com/PremaanshVyas/promptfold
 ```
 
 - **Privacy policy URL:**
