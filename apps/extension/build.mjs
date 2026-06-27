@@ -57,6 +57,14 @@ async function copyStatic() {
     resolve(__dirname, "src/options/options.html"),
     resolve(outdir, "options.html"),
   );
+  // Extension + store icons.
+  await mkdir(resolve(outdir, "icons"), { recursive: true });
+  for (const size of [16, 32, 48, 128]) {
+    await copyFile(
+      resolve(__dirname, `icons/icon-${size}.png`),
+      resolve(outdir, `icons/icon-${size}.png`),
+    );
+  }
 }
 
 async function run() {

@@ -55,3 +55,6 @@ test-results/
 
 # Local agent/session state (machine-specific, never commit)
 .claude/
+
+# Packaged extension zips (build artifacts)
+*.zip
