@@ -33,6 +33,11 @@ function renderVerbatimItem(v: VerbatimItem): string {
     const lang = v.language ?? "";
     return `**${v.label}**\n\n\`\`\`${lang}\n${v.value}\n\`\`\``;
   }
+  if (v.kind === "image") {
+    // Render as a markdown image when the value is a URL; else a labelled note.
+    const isUrl = /^(https?:|data:image\/)/i.test(v.value);
+    return isUrl ? `![${v.label}](${v.value})` : `- **${v.label}** (image): ${v.value}`;
+  }
   return `- **${v.label}** (${v.kind}): \`${v.value}\``;
 }
 

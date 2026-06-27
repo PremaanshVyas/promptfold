@@ -13,7 +13,7 @@ export const BRIEF_JSON_SHAPE = `{
   "decided":  [{ "text": string, "replaces"?: string }],
   "open":     [{ "text": string }],
   "rejected": [{ "idea": string, "why": string }],
-  "verbatim": [{ "kind": "code"|"table"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
+  "verbatim": [{ "kind": "code"|"table"|"image"|"name"|"path"|"number"|"api"|"constraint", "label": string, "value": string, "language"?: string }],
   "filesToAttach": [{ "name": string, "why": string, "source": "chat"|"referenced" }]
 }`;
 
@@ -37,6 +37,11 @@ const SHARED_RULES = `Rules you follow without exception:
 - GROUND EVERYTHING. Before you record an item, find the exact place in the text
   that supports it. If you cannot point to it, do not record it. Never invent a
   decision, an open thread, a value, or a reason.
+- NEVER INVENT METADATA. Do not state a file's size, byte count, character count,
+  line count, or any number that is not literally written in the chat. If a size
+  is not given, omit it, a fabricated "5,000 chars" is a lie with false
+  precision. Describe files qualitatively ("the full script", "the spreadsheet")
+  instead.
 - NO FABRICATED RATIONALE. For every "rejected" item, "why" must be the reason
   actually stated or unmistakably implied. If an idea was dropped but NO reason
   is given, write "reason not stated", a wrong invented reason is worse than
@@ -52,6 +57,12 @@ const SHARED_RULES = `Rules you follow without exception:
   goes for boxed/callout content, step lists, and any structured data the chat
   produced: capture it exactly, do not flatten it. Tables are usually the answer,
   not decoration.
+- IMAGES ARE CONTENT, NOT DECORATION. If the chat displayed or generated an image
+  (a photo, a chart, a diagram, a screenshot, an image-search result), record it
+  in "verbatim" with kind "image": "value" is the image URL if one is present,
+  otherwise a short factual description of what the image showed; "label" is its
+  caption/alt text. Never silently drop an image, its absence makes the handoff
+  incomplete.
 - CRUSH TO NOTHING: apologies, filler, dead ends, retries, tool mechanics, and
   "try this / no that failed" loops. Maximize recall first, then cut noise.
 - LATEST STATE WINS. If a value changed over the chat (e.g. a timeout 30 then

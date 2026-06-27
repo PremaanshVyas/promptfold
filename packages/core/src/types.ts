@@ -150,6 +150,7 @@ export interface RejectedItem {
 export type VerbatimKind =
   | "code"
   | "table"
+  | "image"
   | "name"
   | "path"
   | "number"

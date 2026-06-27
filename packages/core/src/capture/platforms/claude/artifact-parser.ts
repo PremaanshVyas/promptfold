@@ -158,6 +158,21 @@ export function classifyBlock(
     return { kind: "text", text: typeof block.text === "string" ? block.text : "" };
   }
 
+  if (type === "image") {
+    // An image is a real content type. Surface it as a markdown image so the
+    // distiller's image extractor captures it (URL when present; otherwise a
+    // bare note so a content-complete handoff records that an image was shown).
+    const src = (block as { source?: unknown }).source;
+    let url = "";
+    if (src && typeof src === "object") {
+      const s = src as Record<string, unknown>;
+      if (typeof s["url"] === "string") url = s["url"] as string;
+      else if (typeof s["image_url"] === "string") url = s["image_url"] as string;
+    }
+    const alt = typeof block.alt_text === "string" ? block.alt_text : "image";
+    return { kind: "text", text: url ? `![${alt}](${url})` : `[image shown in chat: ${alt}]` };
+  }
+
   if (type === "tool_use") {
     // Legacy display_content artifacts are captured inline here. Everything else
     // tool-shaped (create_file/str_replace/insert/bash/present_files/…) is handed

@@ -63,12 +63,15 @@ function fromArtifacts(artifacts: Artifact[]): {
           : "binary file produced in the chat, attach it",
       });
     } else if (a.presented || a.content.length > BIG_CODE_CHARS) {
+      // Describe size qualitatively only. We never read the real file off disk,
+      // so we must not state a byte/char count, an invented precise size erodes
+      // trust faster than no number at all.
       files.push({
         name: a.filename ?? `${a.title ?? "artifact-" + a.id}`,
         source: "chat",
         why: a.presented
-          ? `final deliverable presented to the user (${a.content.length} chars), attach this file`
-          : `final version produced in the chat (${a.content.length} chars), attach the file rather than re-paste it inline`,
+          ? "final deliverable presented to the user, attach this file"
+          : "produced in full in the chat, attach the file rather than re-paste it inline",
       });
     } else {
       verbatim.push({
@@ -127,6 +130,39 @@ function fromTables(
       if (key.length < 12 || seen.has(key)) continue;
       seen.add(key);
       items.push({ kind: "table", label: "table", value: table });
+    }
+  }
+  return items;
+}
+
+// Markdown image: ![alt](url). url may be http(s), data:, or a sandbox path.
+const IMAGE_RE = /!\[([^\]]*)\]\(\s*(\S+?)\s*\)/g;
+
+/**
+ * Images shown in the chat are a content type in their own right (a product
+ * photo, a generated chart, a screenshot). Capture each as a verbatim "image"
+ * item so a content-complete handoff never silently drops one. Platform-agnostic:
+ * every chatbot renders images as markdown in the message text.
+ */
+function fromImages(
+  transcript: NormalizedTranscript,
+  artifacts: Artifact[],
+): VerbatimItem[] {
+  const items: VerbatimItem[] = [];
+  const seen = new Set<string>();
+  const sources = [
+    ...transcript.messages.map((m) => m.text),
+    ...artifacts.map((a) => a.content),
+  ];
+  for (const text of sources) {
+    IMAGE_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = IMAGE_RE.exec(text)) !== null) {
+      const alt = (m[1] ?? "").trim();
+      const url = (m[2] ?? "").trim();
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      items.push({ kind: "image", label: alt || "image", value: url });
     }
   }
   return items;
@@ -233,6 +269,7 @@ export function distillDeterministic(
   const verbatim = dedupe(
     [
       ...fromTables(transcript, artifacts),
+      ...fromImages(transcript, artifacts),
       ...fromArt.verbatim,
       ...fromFencedCode(transcript),
       ...fromApiMentions(transcript),

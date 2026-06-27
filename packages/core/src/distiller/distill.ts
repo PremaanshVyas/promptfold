@@ -160,17 +160,21 @@ export async function distillWithModel(
     ...finalSections.filesToAttach,
   ]);
 
-  // 4) GUARANTEE tables: the model often summarizes a table into prose. Every
-  // markdown table actually present in the chat is force-added to verbatim,
-  // regardless of what the model returned. This is the "without fail" path.
-  const tableKey = (v: string) => v.replace(/\s+/g, "");
-  const haveTable = new Set(
-    finalSections.verbatim.filter((v) => v.kind === "table").map((v) => tableKey(v.value)),
+  // 4) GUARANTEE structured content: the model often summarizes a table into
+  // prose or drops an image. Every table and image deterministically found in
+  // the chat is force-added to verbatim, regardless of what the model returned.
+  // This is the "without fail" path for content types that must never vanish.
+  const GUARANTEED: ReadonlySet<string> = new Set(["table", "image"]);
+  const vKey = (kind: string, value: string) => `${kind}:${value.replace(/\s+/g, "")}`;
+  const have = new Set(
+    finalSections.verbatim
+      .filter((v) => GUARANTEED.has(v.kind))
+      .map((v) => vKey(v.kind, v.value)),
   );
   for (const v of deterministic.verbatim) {
-    if (v.kind === "table" && !haveTable.has(tableKey(v.value))) {
+    if (GUARANTEED.has(v.kind) && !have.has(vKey(v.kind, v.value))) {
       finalSections.verbatim.push(v);
-      haveTable.add(tableKey(v.value));
+      have.add(vKey(v.kind, v.value));
     }
   }
 

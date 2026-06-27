@@ -50,6 +50,22 @@ function framePreview(label: string, text: string): HTMLElement {
   return box;
 }
 
+/**
+ * Render a captured image. If the value is an http(s)/data URL, show it as a
+ * clickable link (we deliberately do NOT inject an <img>, the host page's CSP
+ * would often block the load and it could fetch a tracking pixel). Otherwise the
+ * value is a plain description, shown as text.
+ */
+function renderImage(value: string): HTMLElement {
+  const isUrl = /^(https?:|data:image\/)/i.test(value);
+  if (!isUrl) return el("div", "cb-vvalue", value);
+  const a = el("a", "cb-vvalue", value);
+  a.href = value;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  return a;
+}
+
 /** Render a markdown table string into a real HTML table (safe, textContent). */
 function renderTable(md: string): HTMLElement {
   const lines = md.trim().split("\n").filter((l) => l.includes("|"));
@@ -155,6 +171,8 @@ function buildSections(state: BriefState): HTMLElement[] {
         item.appendChild(el("pre", "cb-code", v.value));
       } else if (v.kind === "table") {
         item.appendChild(renderTable(v.value));
+      } else if (v.kind === "image") {
+        item.appendChild(renderImage(v.value));
       } else {
         item.appendChild(el("div", "cb-vvalue", v.value));
       }

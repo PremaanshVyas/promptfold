@@ -97,6 +97,73 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(tableItem?.value).toContain("1000mg");
   });
 
+  it("captures a markdown image shown in the chat as a verbatim image", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "liquid iv",
+      chat_messages: [
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "show me the product" }] },
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [{ type: "text", text: "Here it is:\n\n![Liquid IV hydration packet](https://img.example/liquid-iv.png)\n\nClean label." }],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    const img = brief.verbatim.find((v) => v.kind === "image");
+    expect(img?.value).toBe("https://img.example/liquid-iv.png");
+    expect(img?.label).toBe("Liquid IV hydration packet");
+  });
+
+  it("captures a Claude image content block (not just markdown)", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "img block",
+      chat_messages: [
+        {
+          uuid: "a",
+          sender: "assistant",
+          content: [
+            { type: "text", text: "result:" },
+            { type: "image", alt_text: "product shot", source: { type: "url", url: "https://img.example/p.jpg" } },
+          ],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    expect(brief.verbatim.find((v) => v.kind === "image")?.value).toBe("https://img.example/p.jpg");
+    // The image block must NOT be flagged as an unclassified/unknown block.
+    expect(t.integrity.unknown).toEqual([]);
+  });
+
+  it("never states a fabricated char/byte count for a presented file", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "meta",
+      current_leaf_message_uuid: "a1",
+      chat_messages: [
+        { uuid: "u1", sender: "human", content: [{ type: "text", text: "make the file" }] },
+        {
+          uuid: "a1",
+          parent_message_uuid: "u1",
+          sender: "assistant",
+          content: [
+            { type: "tool_use", name: "create_file", input: { path: "/mnt/user-data/outputs/liquid_iv_meta.json", file_text: "x".repeat(2000) } },
+            { type: "tool_use", name: "present_files", input: { filepaths: ["/mnt/user-data/outputs/liquid_iv_meta.json"] } },
+          ],
+        },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    const file = brief.filesToAttach.find((f) => f.name.includes("liquid_iv_meta"));
+    expect(file).toBeDefined();
+    expect(file?.why).not.toMatch(/\d+\s*(chars?|bytes?)/i); // no fabricated size
+  });
+
   it("extracts API endpoints and urls as verbatim", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
