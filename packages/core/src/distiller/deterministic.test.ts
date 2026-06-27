@@ -24,6 +24,14 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(brief.meta.producedBy).toBe("deterministic");
   });
 
+  it("gives the Tier-0 brief a factual 'now' (message count + produced files)", () => {
+    // The no-key path surfaces this brief, so its head must not be empty.
+    const t = normalizeConversation(mixedArtifactsConvo, { capturedAt: AT });
+    const brief = distillDeterministic(t);
+    expect(brief.now).toMatch(/Captured this conversation \(\d+ messages\)/);
+    expect(brief.now).not.toContain("undefined");
+  });
+
   it("flags a referenced-but-absent file to attach", () => {
     const convo: ClaudeConversation = {
       uuid: "c",

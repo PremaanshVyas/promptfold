@@ -79,7 +79,7 @@ describe("normalizeGeminiPayload", () => {
   });
 });
 
-describe("normalizeGeminiPayload — canvas document at candidate[30]", () => {
+describe("normalizeGeminiPayload, canvas document at candidate[30]", () => {
   it("captures the canvas/immersive doc body as an artifact", () => {
     const docBody =
       "# Electrolyte comparison\n\n| Brand | Sodium | Additives |\n| --- | --- | --- |\n| Liquid IV | 500mg | yes |\n| LMNT | 1000mg | no |";

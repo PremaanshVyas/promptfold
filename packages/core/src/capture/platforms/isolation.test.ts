@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 /**
  * Architecture guard: adapters are isolated. Working on one chatbot must never
- * touch another, so no adapter may import a sibling adapter — they share only
+ * touch another, so no adapter may import a sibling adapter, they share only
  * `shared/` and the top-level types. This test fails CI on any violation
  * (the zero-dependency equivalent of dependency-cruiser / import/no-restricted-paths).
  */

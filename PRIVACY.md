@@ -7,18 +7,20 @@ into a structured brief. This policy describes exactly what happens to your data
 
 ## What PromptFold accesses
 
-- **Your Claude conversation content**, when you click the "Carry" button on a
-  conversation you have open. It is read using your existing logged-in session,
-  the same way the page loads your chat.
+- **Your conversation content** on a supported chatbot (Claude, ChatGPT, Gemini,
+  Perplexity, Grok, DeepSeek, HuggingChat), when you click the **Fold** button on
+  a conversation you have open. It is read using your existing logged-in session,
+  the same way the page itself loads your chat.
 - **Your settings**, including your API key, which you enter in the options page.
 
 ## What PromptFold does with it
 
 - Your conversation is read **locally in your browser**.
-- To produce the full brief, the conversation text is sent **only** to the AI
-  provider **you** chose (Anthropic or OpenAI), using **your** API key.
+- To produce the full reasoned brief (Tier 2), the conversation text is sent
+  **only** to the AI provider **you** chose (Anthropic, OpenAI, or an
+  OpenAI-compatible endpoint you configure), using **your** API key.
 - In the no-key (Tier 0) mode, your conversation **never leaves your browser** at
-  all, the brief is produced entirely on-device.
+  all, the deterministic brief is produced entirely on-device.
 
 ## What PromptFold does NOT do
 

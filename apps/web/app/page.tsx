@@ -50,13 +50,13 @@ export default function Home() {
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-12">
         <h1 className="text-4xl font-bold tracking-tight">
-          carry<span className="text-accent">bot</span>
+          Prompt<span className="text-accent">Fold</span>
         </h1>
         <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">
           One click turns a long, messy AI chat into a structured brief:{" "}
-          <strong>Decided · Open · Rejected · Verbatim · Files</strong>, that you
-          can carry to a fresh chat, another chatbot, or a teammate, losing
-          nothing that matters.
+          <strong>Now · Decided · Open · Rejected · Verbatim · Files</strong>,
+          that you can carry to a fresh chat, another chatbot, or a teammate,
+          losing nothing that matters.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Pill tone="bg-accent/10 text-accent">read from the data layer</Pill>

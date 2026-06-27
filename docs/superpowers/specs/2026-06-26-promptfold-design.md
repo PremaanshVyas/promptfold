@@ -4,7 +4,10 @@
 > into a fresh chat, a different chatbot, or a teammate's hands, losing nothing
 > that matters.
 
-Status: **approved design, v1 build in progress** · Date: 2026-06-26
+Status: **original design snapshot (2026-06-26)**. The shipped state is broader
+than this plan (seven data-layer adapters, not Claude-only); see the
+[README](../../../README.md) for what actually ships. Kept as a record of the
+initial design and competitive analysis.
 
 ---
 

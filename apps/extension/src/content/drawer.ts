@@ -293,6 +293,20 @@ export function openBriefDrawer(
       ),
     );
   }
+  // Tier 0 (no key): exact capture + verbatim + files, but no reasoning. Tell
+  // the user a key unlocks the Decided / Open / Rejected sections.
+  if (/no key/i.test(state.meta.producedBy)) {
+    const note = el("div", "cb-tier0");
+    note.appendChild(
+      el(
+        "span",
+        undefined,
+        "Tier 0 (no key): exact capture, verbatim and files-to-attach. Add your own API key in Settings to unlock the reasoned sections (Decided / Open / Rejected).",
+      ),
+    );
+    body.appendChild(note);
+  }
+
   const headFrame = framePreview("added at the TOP when you copy / export", framings.resumeHeader);
   const footFrame = framePreview("added at the END when you copy / export", framings.resumeFooter);
   body.appendChild(headFrame);

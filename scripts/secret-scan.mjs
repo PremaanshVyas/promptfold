@@ -20,6 +20,10 @@ const RULES = [
   { name: "Google API key", re: /AIza[0-9A-Za-z_-]{35}/ },
   { name: "Generic bearer secret", re: /\b(secret|token|password|passwd|api[_-]?key)\b\s*[:=]\s*['"][^'"]{12,}['"]/i },
   { name: "Private key block", re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/ },
+  { name: "GitHub token", re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/ },
+  { name: "Slack token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
+  { name: "Stripe secret key", re: /\bsk_live_[A-Za-z0-9]{20,}\b/ },
+  { name: "Google OAuth client secret", re: /\bGOCSPX-[A-Za-z0-9_-]{20,}\b/ },
 ];
 
 // Allow obvious placeholders so docs/examples don't trip the scanner.

@@ -6,14 +6,23 @@ this is a public repository, so nothing sensitive must ever land in it.
 ## Threat model & guarantees
 
 - **Your API key never leaves your machine** except in the direct HTTPS call to
-  the provider *you* chose (Anthropic or OpenAI). It is stored with
-  `chrome.storage.local`, read only by the service worker, never logged, never
-  injected into the page, and never sent to any PromptFold server, there is none.
+  the provider *you* chose (Anthropic, OpenAI, or any OpenAI-compatible endpoint
+  you configure). It is stored with `chrome.storage.local`, read only by the
+  service worker, never logged, never injected into the page, and never sent to
+  any PromptFold server, there is none.
 - **No middleman.** There is no PromptFold backend. Capture happens in your
   browser; distillation is a direct call from the extension to your provider.
-- **Least privilege.** The extension requests only `storage`, `activeTab`,
-  `scripting`, and host permissions for `claude.ai` plus the two LLM API hosts.
-  No `<all_urls>`.
+- **Least privilege.** Standard `permissions` are exactly `storage`, `activeTab`,
+  `scripting`. `host_permissions` are scoped to the seven supported chat hosts
+  (claude.ai, chatgpt.com / chat.openai.com, gemini.google.com, *.perplexity.ai,
+  grok.com, chat.deepseek.com, huggingface.co) plus the two LLM API hosts
+  (api.anthropic.com, api.openai.com). There is **no** `<all_urls>` in
+  `host_permissions`. A custom OpenAI-compatible endpoint (a self-hosted or
+  third-party base URL you type yourself) needs `optional_host_permissions`, which
+  for that one feature lists `https://*/*` plus localhost. It is **optional** and
+  never granted up front: at runtime the options page requests only the single
+  origin you entered (`new URL(baseUrl).origin`). If you never configure a custom
+  endpoint, it is never requested.
 - **No remote code.** MV3's rule is enforced: all logic is bundled; the extension
   never loads or evals external scripts.
 - **Injected UI is sandboxed** in a Shadow DOM and built with `textContent`
@@ -44,12 +53,13 @@ and must be sanitized before being committed.
 
 ## Platform terms (ToS)
 
-PromptFold reads *your own* conversation data with *your own* session, the
-Export-Data category, and distills it with *your own* LLM key. It **never**
-routes your Claude session for inference (the pattern that gets accounts banned).
-Capture is on-demand, one conversation per click, never bulk-looped. The internal
-endpoint is undocumented and may change; this is a personal/portfolio tool, used
-at your own risk, and is not affiliated with or endorsed by Anthropic.
+PromptFold reads *your own* conversation data with *your own* session (the
+Export-Data category) and distills it with *your own* LLM key. It **never** routes
+a chatbot session for inference (the pattern that gets accounts banned). Capture is
+on-demand, one conversation per click, never bulk-looped. These internal endpoints
+are undocumented and may change without notice; this is a personal/portfolio tool,
+used at your own risk, and is not affiliated with or endorsed by Anthropic, OpenAI,
+Google, Perplexity, xAI, DeepSeek, or Hugging Face.
 
 ## Reporting a vulnerability
 

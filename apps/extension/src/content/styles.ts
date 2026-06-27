@@ -133,6 +133,11 @@ export const STYLES = `
   padding: 10px 12px; font-size: 13px; line-height: 1.5; color: #8a4b00; margin-bottom: 16px;
 }
 
+.cb-tier0 {
+  background: var(--panel); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; line-height: 1.5; color: var(--ink); margin-bottom: 16px;
+}
+
 /* No-key panel */
 .cb-needkey { padding: 30px 24px; }
 .cb-needkey h2 { font-size: 17px; margin: 0 0 10px; }

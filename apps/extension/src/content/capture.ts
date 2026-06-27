@@ -1,13 +1,15 @@
 /**
  * Capture adapters. This is what makes PromptFold NOT hardcoded to one platform.
  *
- *   pickAdapter(hostname) -> the best adapter for the current site
- *     claude.ai      -> ClaudeAdapter   (reads the data layer; perfect, artifacts)
- *     anything else  -> GenericDomAdapter (reads the visible messages; lower
- *                       fidelity, honest about it)
+ *   pickAdapter(hostname) -> the best adapter for the current site.
+ * Seven precise data-layer adapters (claude, chatgpt, perplexity, deepseek,
+ * grok, huggingface, gemini) read each platform's own conversation API for a
+ * complete capture (artifacts/canvas included). Any other chat UI falls back to
+ * the GenericDomAdapter, which reads the visible messages, lower fidelity, and
+ * is honest about it (source: "screen"). A data-layer adapter that throws also
+ * falls back to the DOM read.
  *
- * Adding a new precise platform later = add one adapter to the list. Until then
- * any chat UI still produces a brief via the DOM fallback.
+ * Adding a new precise platform = add one adapter to the list below.
  */
 
 import {
@@ -267,7 +269,7 @@ async function geminiTokens(): Promise<GeminiTokens | null> {
   const tokens: GeminiTokens = { at };
   const hl = pick(html || document.documentElement.innerHTML, "TuX5cc");
   if (hl) tokens.hl = hl;
-  trace("token found — at:", at.length, "chars, hl:", hl);
+  trace("token found at:", at.length, "chars, hl:", hl);
   return tokens;
 }
 

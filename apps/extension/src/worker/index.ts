@@ -7,7 +7,12 @@
  * Nothing leaves the machine except the call to the user's chosen provider.
  */
 
-import { distillWithModel, makeLlmClient, renderBrief } from "@promptfold/core";
+import {
+  distillDeterministic,
+  distillWithModel,
+  makeLlmClient,
+  renderBrief,
+} from "@promptfold/core";
 import type { DistillRequest, WorkerResponse } from "../shared/messages.js";
 import { loadSettings, hasKey } from "../shared/settings.js";
 
@@ -31,9 +36,17 @@ async function runDistill(
 ): Promise<void> {
   const settings = await loadSettings();
   if (!hasKey(settings)) {
-    // No key → the brief needs a model. Tell the content script, which offers a
-    // clean raw export instead of a hollow, reasoning-free "brief".
-    post({ type: "needsKey" });
+    // No key → Tier 0: a deterministic brief, exact capture plus extracted
+    // verbatim (code, tables, images, formulas, APIs) and the files-to-attach
+    // list, produced entirely on-device. Reasoning sections (Decided/Open/
+    // Rejected) need a model, so they stay empty until the user adds a key.
+    const brief = distillDeterministic(req.transcript);
+    post({
+      type: "brief",
+      framings: renderBrief(brief),
+      state: brief,
+      producedBy: "deterministic (no key)",
+    });
     return;
   }
   const stopKeepAlive = startKeepAlive();

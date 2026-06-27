@@ -326,8 +326,15 @@ export function distillDeterministic(
     ...referencedFiles(transcript).slice(0, maxRef),
   ]);
 
+  // A factual "now" with no reasoning (Tier 0 cannot reason): message count and
+  // the files produced. This is what the no-key brief shows at its head.
+  const produced = files.filter((f) => f.source === "chat").map((f) => f.name);
+  const now =
+    `Captured this conversation (${transcript.messages.length} messages).` +
+    (produced.length > 0 ? ` Files produced: ${produced.join(", ")}.` : "");
+
   return {
-    now: "",
+    now,
     decided: [],
     open: [],
     rejected: [],

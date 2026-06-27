@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# carrybot — .gitignore
+# PromptFold .gitignore
 # Security-first: this file exists BEFORE any code, so secrets can
 # never enter git history. Nothing sensitive is ever committed.
 # ─────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ out/
 **/*.key
 **/*.pem
 api-keys.json
-.carrybot-key
+.promptfold-key
 
 # Eval fixtures may contain real chat data — only sanitized fixtures are committed.
 # Raw, unsanitized captures go here and are ignored:
@@ -52,3 +52,6 @@ test-results/
 # Misc
 *.tgz
 .cache/
+
+# Local agent/session state (machine-specific, never commit)
+.claude/
