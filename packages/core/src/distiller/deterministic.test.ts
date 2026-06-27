@@ -97,25 +97,51 @@ describe("distillDeterministic (Tier 0)", () => {
     expect(tableItem?.value).toContain("1000mg");
   });
 
-  it("captures an image by SUBJECT, never the URL, and never as a gallery", () => {
+  it("does NOT re-ingest a pasted brief marker as a real image", () => {
+    // The user pastes earlier PromptFold output (a critique) back into the chat.
+    // That text mentions image markers, but no image was actually shown here, so
+    // nothing must be captured. Text is never scanned for images.
     const convo: ClaudeConversation = {
       uuid: "c",
-      name: "liquid iv",
+      name: "pasted feedback",
       chat_messages: [
-        { uuid: "u", sender: "human", content: [{ type: "text", text: "show me the product" }] },
         {
-          uuid: "a",
+          uuid: "u",
+          sender: "human",
+          content: [{ type: "text", text:
+            "Here is the last brief to review:\n[image shown: Liquid IV Tropical Flavor 30 Count (image search)]\n- image shown (image): Liquid\nthe dedup target is one entry" }],
+        },
+        { uuid: "a", sender: "assistant", content: [{ type: "text", text: "Noted." }] },
+      ],
+    };
+    const t = normalizeConversation(convo, { capturedAt: AT });
+    const images = distillDeterministic(t).verbatim.filter((v) => v.kind === "image");
+    expect(images).toEqual([]); // no real image block/search => no image item
+  });
+
+  it("captures only the LATEST image-showing turn (no cross-turn bleed)", () => {
+    const convo: ClaudeConversation = {
+      uuid: "c",
+      name: "two searches",
+      chat_messages: [
+        {
+          uuid: "a1",
           sender: "assistant",
-          content: [{ type: "text", text: "Here it is:\n\n![Liquid IV hydration packet](https://img.example/liquid-iv.png)\n\nClean label." }],
+          content: [{ type: "image", alt_text: "Liquid IV Tropical Flavor 30 Count", source: { url: "https://x/t.jpg" } }],
+        },
+        { uuid: "u", sender: "human", content: [{ type: "text", text: "now golden cherry" }] },
+        {
+          uuid: "a2",
+          sender: "assistant",
+          content: [{ type: "image", alt_text: "Liquid IV Golden Cherry", source: { url: "https://x/gc.jpg" } }],
         },
       ],
     };
     const t = normalizeConversation(convo, { capturedAt: AT });
-    const brief = distillDeterministic(t);
-    const images = brief.verbatim.filter((v) => v.kind === "image");
+    const images = distillDeterministic(t).verbatim.filter((v) => v.kind === "image");
     expect(images).toHaveLength(1);
-    expect(images[0]?.value).toBe("Liquid IV hydration packet"); // subject, not URL
-    expect(images[0]?.value).not.toMatch(/https?:\/\//); // URL is discarded
+    expect(images[0]?.value).toContain("Golden Cherry"); // latest
+    expect(images[0]?.value).not.toContain("Tropical"); // the stale one does not bleed in
   });
 
   it("captures a Claude image content block by description, not URL", () => {

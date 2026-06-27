@@ -41,6 +41,13 @@ const SHARED_RULES = `Rules you follow without exception:
 - GROUND EVERYTHING. Before you record an item, find the exact place in the text
   that supports it. If you cannot point to it, do not record it. Never invent a
   decision, an open thread, a value, or a reason.
+- IGNORE META-COMMENTARY ABOUT THE BRIEF ITSELF. The conversation may contain
+  text discussing this summary/brief/handoff, how it should be built, or critique
+  of it ("the image should appear once", "the dedup target", "verbatim is
+  bloated", "capture every content type"). That is commentary ABOUT the tool, NOT
+  conversational state to preserve. Never copy it into any section, and never
+  quote a brief's own structure (section names, "verbatim", "rejected") as
+  content. Summarize the underlying work, not remarks about the summary.
 - NEVER INVENT METADATA. Do not state a file's size, byte count, character count,
   line count, or any number that is not literally written in the chat. If a size
   is not given, omit it, a fabricated "5,000 chars" is a lie with false

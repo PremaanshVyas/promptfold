@@ -186,13 +186,15 @@ function normalizeMessage(
     text = remainingText;
   }
 
-  // Note that an image was shown by its SUBJECT, ONE note for the whole turn
-  // (image blocks and search thumbnails combined), never the rot-prone retailer
-  // URLs and never an embedded gallery. Sources (non-image citations) keep their
-  // title+url, the established pattern.
+  // Record a shown image by its SUBJECT as STRUCTURED data on the message, ONE
+  // entry for the whole turn (image blocks and search thumbnails combined),
+  // never URLs, never a gallery, and never a text marker (a marker would be
+  // re-ingested if the brief is later pasted back into a chat). Sources
+  // (non-image citations) keep their title+url in text, the established pattern.
+  const images: string[] = [];
   if (imageLabels.length > 0) {
     const subject = commonSubject(imageLabels);
-    text += `\n\n[image shown: ${subject}${fromSearch ? " (image search)" : ""}]`;
+    images.push(`${subject}${fromSearch ? " (image search)" : ""}`);
   }
   if (sources.size > 0) {
     const lines = [...sources].map(([url, title]) => `- ${title}: ${url}`);
@@ -204,6 +206,7 @@ function normalizeMessage(
       uuid: msg.uuid,
       role,
       text: text.trim(),
+      ...(images.length > 0 ? { images } : {}),
       ...(msg.created_at ? { createdAt: msg.created_at } : {}),
     },
     artifacts,
@@ -248,8 +251,8 @@ export function normalizeConversation(
 
   for (const raw of branch) {
     const n = normalizeMessage(raw, nextArtifactId);
-    // Keep messages that have text OR produced an artifact; drop fully-empty ones.
-    if (n.message.text.length > 0 || n.artifacts.length > 0) {
+    // Keep messages with text, an artifact, OR a shown image; drop fully-empty.
+    if (n.message.text.length > 0 || n.artifacts.length > 0 || (n.message.images?.length ?? 0) > 0) {
       messages.push(n.message);
     }
     artifacts.push(...n.artifacts);

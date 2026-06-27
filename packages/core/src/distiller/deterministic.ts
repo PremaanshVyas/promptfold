@@ -137,50 +137,33 @@ function fromTables(
   return items;
 }
 
-// Markdown image (![alt](url)) and our capture-time note ([image shown: ...]).
-const IMAGE_MD_RE = /!\[([^\]]*)\]\(\s*\S+?\s*\)/g;
-const IMAGE_NOTE_RE = /\[image[^\]\n]{0,160}\]/gi;
 // Spreadsheet / cell formula: =B2/B3, =SUM(A1:A3)*C2, etc. NOT an API endpoint.
 const FORMULA_RE = /=\s*[A-Z]{1,3}\$?\d{1,4}\s*(?:[-+*/]\s*\$?[A-Z]{1,3}\$?\d{1,4}\s*)+/g;
-const MAX_IMAGES = 8;
 
 /**
- * Record that an image was SHOWN, by its subject, not its URL. A handoff needs
- * "a Liquid IV product photo was shown (image search)", a durable fact, NOT the
- * hotlinked retailer CDN URL, which rots within weeks and is not state the next
- * session must preserve. So we capture the description and deliberately discard
- * the URL, and we never embed/render it. One line per distinct subject.
+ * Record that an image was SHOWN, by its subject, from the STRUCTURED
+ * `message.images` captured at the data layer, never by scanning text. Scanning
+ * text re-ingested the tool's own markers when a brief was pasted back into a
+ * chat (a round-2 image reappearing in round 5). Latest-state-wins: only the
+ * most recent image-showing turn is current state, so we emit just that one,
+ * which also prevents prior turns' images from bleeding in. URL is never stored.
  */
-function fromImages(
-  transcript: NormalizedTranscript,
-  artifacts: Artifact[],
-): VerbatimItem[] {
-  const items: VerbatimItem[] = [];
+function fromImages(transcript: NormalizedTranscript): VerbatimItem[] {
+  let latest: string[] | undefined;
+  for (const m of transcript.messages) {
+    if (m.images && m.images.length > 0) latest = m.images;
+  }
+  if (!latest) return [];
   const seen = new Set<string>();
-  const push = (subject: string): void => {
+  const items: VerbatimItem[] = [];
+  for (const subject of latest) {
     const v = subject.trim() || "image";
     const key = v.toLowerCase();
-    if (seen.has(key)) return;
+    if (seen.has(key)) continue;
     seen.add(key);
     items.push({ kind: "image", label: "image shown", value: v });
-  };
-  const sources = [
-    ...transcript.messages.map((m) => m.text),
-    ...artifacts.map((a) => a.content),
-  ];
-  for (const text of sources) {
-    IMAGE_MD_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = IMAGE_MD_RE.exec(text)) !== null) push((m[1] ?? "").trim()); // alt only, URL dropped
-    for (const note of text.matchAll(IMAGE_NOTE_RE)) {
-      const inner = note[0]
-        .replace(/^\[|\]$/g, "")
-        .replace(/^image(?:\s+shown(?:\s+in\s+chat)?)?\s*:?\s*/i, "")
-        .trim();
-      push(inner);
-    }
   }
-  return items.slice(0, MAX_IMAGES);
+  return items;
 }
 
 /** Spreadsheet/cell formulas → one verbatim "constraint" each, kept separate. */
@@ -294,7 +277,7 @@ export function distillDeterministic(
   const verbatim = dedupe(
     [
       ...fromTables(transcript, artifacts),
-      ...fromImages(transcript, artifacts),
+      ...fromImages(transcript),
       ...fromFormulas(transcript),
       ...fromArt.verbatim,
       ...fromFencedCode(transcript),

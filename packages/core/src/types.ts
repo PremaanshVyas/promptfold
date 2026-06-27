@@ -89,6 +89,13 @@ export interface NormalizedMessage {
   role: Role;
   /** Plain text of the message (tool blocks stripped out into `artifacts`). */
   text: string;
+  /**
+   * Subjects of images SHOWN in this message (no URLs), captured structurally at
+   * the data layer, one entry per image event. Kept off `text` on purpose: a
+   * text marker would be re-ingested if the conversation later quotes the brief
+   * (e.g. pasted feedback), structured data cannot be confused with prose.
+   */
+  images?: string[];
   createdAt?: string;
 }
 

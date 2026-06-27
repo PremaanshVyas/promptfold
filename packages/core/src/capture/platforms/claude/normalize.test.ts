@@ -143,7 +143,7 @@ describe("search-result mining (web_search / image subjects / citations)", () =>
     expect(extractCitations(block)).toEqual([{ title: "Source A", url: "https://src.example/a" }]);
   });
 
-  it("appends a Sources block and image markdown to the message, keeping integrity clean", () => {
+  it("records image subjects structurally and sources in text, keeping integrity clean", () => {
     const convo: ClaudeConversation = {
       uuid: "c",
       name: "liquid iv images",
@@ -167,11 +167,13 @@ describe("search-result mining (web_search / image subjects / citations)", () =>
     };
     const t = normalizeConversation(convo, { capturedAt: AT });
     const assistant = t.messages.find((m) => m.role === "assistant");
-    // Non-image web result -> Sources (title + url kept).
+    // Non-image web result -> Sources (title + url kept) in text.
     expect(assistant?.text).toContain("Sources:");
     expect(assistant?.text).toContain("Liquid IV Tropical stick packs");
-    // Image result -> a single subject note, NOT an embedded image, NOT a URL.
-    expect(assistant?.text).toContain("[image shown:");
+    // Image result -> ONE structured subject (no URL), never a text marker that
+    // could be re-ingested, never an embedded image.
+    expect(assistant?.images).toEqual(["Liquid IV product shot (image search)"]);
+    expect(assistant?.text).not.toContain("[image shown:");
     expect(assistant?.text).not.toContain("![");
     expect(assistant?.text).not.toContain("img.example/liquid-iv.jpg");
     // The result block must NOT be flagged as an unclassified/unknown block.
