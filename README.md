@@ -59,10 +59,12 @@ conversation endpoint with your logged-in session:
 | **DeepSeek** | `chat.deepseek.com` | bearer read from `localStorage.userToken`, `GET /api/v0/chat/history_messages` |
 | **HuggingChat** | `huggingface.co/chat` | cookie session, `GET /chat/api/conversation/{id}` |
 
-Anything else falls back to a **generic DOM reader** that scrapes the visible
-messages. It is lower fidelity and labels itself honestly (`read from screen`), so
-you always know whether the capture was complete. A data-layer adapter that fails
-at runtime also falls back to the DOM read rather than erroring out.
+On those seven hosts, if a data-layer adapter ever fails at runtime, capture
+falls back to a **generic DOM reader** that scrapes the visible messages. It is
+lower fidelity and labels itself honestly (`read from screen`), so you always know
+whether the capture was complete. (The extension injects only on the seven
+supported hosts; the DOM reader is a per-platform safety net, not a way to capture
+arbitrary sites.)
 
 ## Tiers
 
@@ -163,7 +165,7 @@ Then load the extension: open `chrome://extensions`, turn on **Developer mode**,
 click **Load unpacked**, and pick `apps/extension/dist`. Open a supported chat and
 click **Fold** in the bottom corner. Without a key you get the Tier 0 brief
 immediately. To unlock the reasoned sections, open the options page and add your
-own API key (Anthropic, OpenAI, or any OpenAI-compatible endpoint).
+own Anthropic or OpenAI API key.
 
 > **Honesty note.** The live captures and the BYOK model call can only run in a
 > real logged-in browser with a real key. They are built to each platform's
@@ -187,10 +189,9 @@ Short version:
 - **Secrets cannot enter git.** A `.gitignore` written before any code, plus a
   secret-scan pre-commit hook and the same scan in CI.
 - **Least privilege.** Standard permissions are `storage`, `activeTab`,
-  `scripting`. Host permissions cover the supported chat hosts and the LLM API
-  hosts. A custom OpenAI-compatible endpoint requires the broad
-  `optional_host_permissions`, granted narrowly at runtime only for the origin you
-  type. See SECURITY.md for the exact set and rationale.
+  `scripting`. Host permissions cover only the seven supported chat hosts and the
+  two LLM API hosts. No `<all_urls>`, no broad optional permissions. See
+  SECURITY.md for the exact set.
 
 ## Tech stack
 

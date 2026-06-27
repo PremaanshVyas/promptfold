@@ -22,11 +22,6 @@
     "https://api.anthropic.com/*",
     "https://api.openai.com/*"
   ],
-  "optional_host_permissions": [
-    "https://*/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
-  ],
   "background": {
     "service_worker": "worker.js",
     "type": "module"
@@ -38,16 +33,10 @@
         "https://chatgpt.com/*",
         "https://chat.openai.com/*",
         "https://gemini.google.com/*",
-        "https://aistudio.google.com/*",
         "https://*.perplexity.ai/*",
-        "https://poe.com/*",
-        "https://copilot.microsoft.com/*",
         "https://grok.com/*",
         "https://chat.deepseek.com/*",
-        "https://chat.mistral.ai/*",
-        "https://huggingface.co/chat/*",
-        "https://meta.ai/*",
-        "https://www.meta.ai/*"
+        "https://huggingface.co/chat/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

@@ -45,14 +45,13 @@ screen scrape) and distills it into:
 - Verbatim: code, tables, formulas, and exact values, kept byte-for-byte
 - Files to attach: what to bring for full context
 
-Works across Claude, ChatGPT, Gemini, Perplexity, Grok, DeepSeek, and HuggingChat
-from each platform's own conversation API, and falls back to a labelled screen
-read on other chat sites.
+Works across Claude, ChatGPT, Gemini, Perplexity, Grok, DeepSeek, and HuggingChat,
+reading each platform's own conversation API for a complete capture.
 
 Bring your own key (BYOK): without a key you still get a complete on-device
-capture; add your own Anthropic, OpenAI, or OpenAI-compatible key for the full
-reasoned brief. No accounts, no daily limits, no middleman server. Your chat is
-read locally and sent only to the provider you chose with your key.
+capture; add your own Anthropic or OpenAI key for the full reasoned brief. No
+accounts, no daily limits, no middleman server. Your chat is read locally and sent
+only to the provider you chose with your key.
 ```
 
 - **Privacy policy URL:**
@@ -72,26 +71,18 @@ read locally and sent only to the provider you chose with your key.
     huggingface.co): fetch the user's own conversation from each platform's API
     using their existing logged-in session.
   - `host_permissions` (api.anthropic.com, api.openai.com): send the conversation
-    to the user's chosen LLM provider with the user's own key.
-  - `optional_host_permissions` (https://*/*, localhost): requested at runtime
-    ONLY if the user configures a custom OpenAI-compatible endpoint, because that
-    base URL is arbitrary and user-supplied. Not requested otherwise.
+    to the user's chosen LLM provider (Anthropic or OpenAI) with the user's own key.
+- **No broad permissions:** there is no `<all_urls>` and no
+  `optional_host_permissions`. The extension injects and fetches only on the
+  hosts listed above.
 - **Data usage:** Reads conversation content and the user's settings. Conversation
   text is sent only to the user's chosen AI provider to produce the brief. No data
   is collected by the developer, sold, or shared; there is no analytics and no
   backend server. The API key is stored locally (chrome.storage.local) and sent
   only to the chosen provider.
 
-## Two decisions that affect review (your call)
-
-1. **`optional_host_permissions: "https://*/*"`** (for the custom-endpoint
-   feature). It is optional and granted narrowly at runtime, but reviewers
-   scrutinize broad host patterns. Options: keep it and justify (as above), or
-   drop the custom-endpoint feature from the store build to ease review.
-2. **Content-script `matches` on adapter-less sites** (poe.com,
-   copilot.microsoft.com, chat.mistral.ai, meta.ai, aistudio.google.com): these
-   only get the generic DOM fallback. Keeping them widens the inject surface a
-   reviewer will ask about. Options: keep (justify as "generic chat capture") or
-   trim to the seven supported platforms for the first submission.
+The earlier review-friction items are resolved: the custom-endpoint feature
+(and its broad `https://*/*` permission) was removed, and the content scripts
+are trimmed to the seven supported platforms only.
 ```
 </content>

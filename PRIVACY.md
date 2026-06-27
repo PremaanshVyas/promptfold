@@ -17,8 +17,8 @@ into a structured brief. This policy describes exactly what happens to your data
 
 - Your conversation is read **locally in your browser**.
 - To produce the full reasoned brief (Tier 2), the conversation text is sent
-  **only** to the AI provider **you** chose (Anthropic, OpenAI, or an
-  OpenAI-compatible endpoint you configure), using **your** API key.
+  **only** to the AI provider **you** chose (Anthropic or OpenAI), using **your**
+  API key.
 - In the no-key (Tier 0) mode, your conversation **never leaves your browser** at
   all, the deterministic brief is produced entirely on-device.
 

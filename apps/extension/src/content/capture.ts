@@ -4,12 +4,13 @@
  *   pickAdapter(hostname) -> the best adapter for the current site.
  * Seven precise data-layer adapters (claude, chatgpt, perplexity, deepseek,
  * grok, huggingface, gemini) read each platform's own conversation API for a
- * complete capture (artifacts/canvas included). Any other chat UI falls back to
- * the GenericDomAdapter, which reads the visible messages, lower fidelity, and
- * is honest about it (source: "screen"). A data-layer adapter that throws also
- * falls back to the DOM read.
+ * complete capture (artifacts/canvas included). The extension injects only on
+ * those seven hosts (see manifest content_scripts). If a data-layer adapter
+ * throws, the GenericDomAdapter is a per-platform safety net: it reads the
+ * visible messages, lower fidelity, and is honest about it (source: "screen").
  *
- * Adding a new precise platform = add one adapter to the list below.
+ * Adding a new precise platform = add one adapter here AND its host to the
+ * manifest content_scripts + host_permissions.
  */
 
 import {
